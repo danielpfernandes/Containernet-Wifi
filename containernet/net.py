@@ -98,17 +98,20 @@ from time import sleep
 from itertools import chain, groupby
 from math import ceil
 
-from mininet.cli import CLI
+from mininet.net import Mininet
 from mininet.log import info, error, debug, output, warn
-from mininet.node import ( Node, Docker, Host, OVSKernelSwitch,
+from mininet.node import ( Node, Host, OVSKernelSwitch,
                            DefaultController, Controller, OVSSwitch, OVSBridge )
 from mininet.nodelib import NAT
-from mininet.link import Link, Intf
+from containernet.cli import CLI
+from containernet.node import Docker
+from mininet.link import Link, Intf, TCLink
 from mininet.util import ( quietRun, fixLimits, numCores, ensureRoot,
-                           macColonHex, ipStr, ipParse, netParse, ipAdd,
-                           waitListening, BaseString )
-from mininet.term import cleanUpScreens, makeTerms
-
+                                macColonHex, ipStr, ipParse, netParse, ipAdd,
+                                waitListening, BaseString )
+from containernet.term import cleanUpScreens, makeTerms
+from mn_wifi.net import Mininet_wifi
+from mn_wifi.node import OVSKernelAP
 from subprocess import Popen
 
 # Mininet version: should be consistent with README and LICENSE
@@ -119,15 +122,14 @@ CONTAINERNET_VERSION = "3.0"
 # so it can be removed at a later time
 SAP_PREFIX = 'sap.'
 
-class Mininet( object ):
+class Containernet( Mininet_wifi ):
     "Network emulation with hosts spawned in network namespaces."
 
     def __init__( self, topo=None, switch=OVSKernelSwitch, host=Host,
                   controller=DefaultController, link=Link, intf=Intf,
                   build=True, xterms=False, cleanup=False, ipBase='10.0.0.0/8',
-                  inNamespace=False,
-                  autoSetMacs=False, autoStaticArp=False, autoPinCpus=False,
-                  listenPort=None, waitConnected=False ):
+                  inNamespace=False, autoSetMacs=False, autoStaticArp=False,
+                  autoPinCpus=False, listenPort=None, waitConnected=False ):
         """Create Mininet object.
            topo: Topo (topology) object or None
            switch: default Switch class
@@ -145,6 +147,8 @@ class Mininet( object ):
            autoPinCpus: pin hosts to (real) cores (requires CPULimitedHost)?
            listenPort: base listening port to open; will be incremented for
                each additional switch in the net if inNamespace=False"""
+        # call original Mininet.__init__
+
         self.topo = topo
         self.switch = switch
         self.host = host
@@ -166,17 +170,40 @@ class Mininet( object ):
         self.nextCore = 0  # next core for pinning hosts to CPUs
         self.listenPort = listenPort
         self.waitConn = waitConnected
-
+        self.channel = 1
+        self.mode = 'g'
+        self.autoSetPositions = ''
+        self.nextPos_sta = 1
+        self.n_radios = 0
         self.hosts = []
         self.switches = []
+        self.aps = []
+        self.cars = []
+        self.sixLP = []
         self.controllers = []
+        self.stations = []
+        self.configure4addr = False
+        self.configureWiFiDirect = False
+        self.wmediumd_mode = ''
+        self.isVanet = False
+        self.driver = 'nl80211'
+        self.ssid = 'new-ssid'
+        self.accessPoint = OVSKernelAP
+        self.bridge = False
+        self.ifb = False
+        self.alt_module = False
+        self.noise_threshold = -91
+        self.cca_threshold=-90
+        self.ppm_is_set = False
+        self.docker = False
         self.links = []
 
         self.nameToNode = {}  # name to Node (Host/Switch) objects
 
         self.terms = []  # list of spawned xterm processes
 
-        Mininet.init()  # Initialize Mininet if necessary
+        #Mininet_wifi.init()  # Initialize Mininet if necessary
+        self.SAPswitches = dict()
 
         self.built = False
         if topo and build:
@@ -219,31 +246,6 @@ class Mininet( object ):
         self.nextIP += 1
         return ip
 
-    def addHost( self, name, cls=None, **params ):
-        """Add host.
-           name: name of host to add
-           cls: custom host class/constructor (optional)
-           params: parameters for host
-           returns: added host"""
-        # Default IP and MAC addresses
-        defaults = { 'ip': ipAdd( self.nextIP,
-                                  ipBaseNum=self.ipBaseNum,
-                                  prefixLen=self.prefixLen ) +
-                                  '/%s' % self.prefixLen }
-        if self.autoSetMacs:
-            defaults[ 'mac' ] = macColonHex( self.nextIP )
-        if self.autoPinCpus:
-            defaults[ 'cores' ] = self.nextCore
-            self.nextCore = ( self.nextCore + 1 ) % self.numCores
-        self.nextIP += 1
-        defaults.update( params )
-        if not cls:
-            cls = self.host
-        h = cls( name, **defaults )
-        self.hosts.append( h )
-        self.nameToNode[ name ] = h
-        return h
-
     def removeHost( self, name, **params):
         """
         Remove a host from the network at runtime.
@@ -283,54 +285,9 @@ class Mininet( object ):
         "Delete a host"
         self.delNode( host, nodes=self.hosts )
 
-    def addSwitch( self, name, cls=None, **params ):
-        """Add switch.
-           name: name of switch to add
-           cls: custom switch class/constructor (optional)
-           returns: added switch
-           side effect: increments listenPort ivar ."""
-        defaults = { 'listenPort': self.listenPort,
-                     'inNamespace': self.inNamespace }
-        defaults.update( params )
-        if not cls:
-            cls = self.switch
-        sw = cls( name, **defaults )
-        if not self.inNamespace and self.listenPort:
-            self.listenPort += 1
-        self.switches.append( sw )
-        self.nameToNode[ name ] = sw
-        return sw
-
     def delSwitch( self, switch ):
         "Delete a switch"
         self.delNode( switch, nodes=self.switches )
-
-    def addController( self, name='c0', controller=None, **params ):
-        """Add controller.
-           controller: Controller class"""
-        # Get controller class
-        if not controller:
-            controller = self.controller
-        # Construct new controller if one is not given
-        if isinstance( name, Controller ):
-            controller_new = name
-            # Pylint thinks controller is a str()
-            # pylint: disable=maybe-no-member
-            name = controller_new.name
-            # pylint: enable=maybe-no-member
-        else:
-            controller_new = controller( name, **params )
-        # Add new controller to net
-        if controller_new:  # allow controller-less setups
-            self.controllers.append( controller_new )
-            self.nameToNode[ name ] = controller_new
-        return controller_new
-
-    def delController( self, controller ):
-        """Delete a controller
-           Warning - does not reconfigure switches, so they
-           may still attempt to connect to it!"""
-        self.delNode( controller )
 
     def addNAT( self, name='nat0', connect=True, inNamespace=False,
                 **params):
@@ -434,6 +391,7 @@ class Mininet( object ):
         options.setdefault( 'addr1', self.randMac() )
         options.setdefault( 'addr2', self.randMac() )
         cls = self.link if cls is None else cls
+        cls = TCLink
         link = cls( node1, node2, **options )
 
         # Allow to add links at runtime
@@ -503,7 +461,8 @@ class Mininet( object ):
 
     def configHosts( self ):
         "Configure a set of hosts."
-        for host in self.hosts:
+        nodes = self.hosts + self.stations
+        for host in nodes:
             info( host.name + ' ' )
             intf = host.defaultIntf()
             if intf:
@@ -636,6 +595,10 @@ class Mininet( object ):
             self.waitConnected()
 
     def stop( self ):
+        info('*** Removing NAT rules of %i SAPs\n' % len(self.SAPswitches))
+        for SAPswitch in self.SAPswitches:
+            self.removeSAPNAT(self.SAPswitches[SAPswitch])
+        info("\n")
         "Stop the controller(s), switches and hosts"
         info( '*** Stopping %i controllers\n' % len( self.controllers ) )
         for controller in self.controllers:
@@ -650,27 +613,28 @@ class Mininet( object ):
             info( '.' )
             link.stop()
         info( '\n' )
-        info( '*** Stopping %i switches\n' % len( self.switches ) )
+        nodesL2 = self.switches + self.aps
+        info( '*** Stopping %i switches\n' % len( nodesL2 ) )
         stopped = {}
         for swclass, switches in groupby(
-                sorted( self.switches,
-                        key=lambda s: str( type( s ) ) ), type ):
-            switches = tuple( switches )
-            if hasattr( swclass, 'batchShutdown' ):
-                success = swclass.batchShutdown( switches )
-                stopped.update( { s: s for s in success } )
-        for switch in self.switches:
-            info( switch.name + ' ' )
+                sorted(nodesL2, key=type), type):
+            switches = tuple(switches)
+            if hasattr(swclass, 'batchShutdown'):
+                success = swclass.batchShutdown(switches)
+                stopped.update({s: s for s in success})
+        for switch in nodesL2:
+            info(switch.name + ' ')
             if switch not in stopped:
                 switch.stop()
             switch.terminate()
         info( '\n' )
-        info( '*** Stopping %i hosts\n' % len( self.hosts ) )
-        for host in self.hosts:
-            info( host.name + ' ' )
-            host.terminate()
+        nodes = self.hosts + self.stations
+        info( '*** Stopping %i hosts/stations\n' % len( nodes ) )
+        for node in nodes:
+            info( node.name + ' ' )
+            node.terminate()
+        Mininet_wifi.closeMininetWiFi()
         info( '\n*** Done\n' )
-
 
     def run( self, test, *args, **kwargs ):
         "Perform a complete start/test/stop cycle."
@@ -1037,18 +1001,11 @@ class Mininet( object ):
         fixLimits()
         cls.inited = True
 
-
-class Containernet( Mininet ):
     """
     A Mininet with Docker related methods.
     Inherits Mininet.
     This class is not more than API beautification.
     """
-
-    def __init__(self, **params):
-        # call original Mininet.__init__
-        Mininet.__init__(self, **params)
-        self.SAPswitches = dict()
 
     def addDocker( self, name, cls=Docker, **params ):
         """
@@ -1091,7 +1048,6 @@ class Containernet( Mininet ):
 
         self.removeSAPNAT(SAPswitch)
 
-
     def addSAPNAT(self, SAPSwitch):
         """
         Add NAT to the Containernet, so external SAPs can reach the outside internet through the host
@@ -1119,9 +1075,7 @@ class Containernet( Mininet ):
 
         info("added SAP NAT rules for: {0} - {1}\n".format(SAPSwitch.name, SAPNet))
 
-
     def removeSAPNAT(self, SAPSwitch):
-
         SAPip = SAPSwitch.ip
         SAPNet = str(ipaddress.IPv4Network(unicode(SAPip), strict=False))
         # due to a bug with python-iptables, removing and finding rules does not succeed when the mininet CLI is running
@@ -1139,16 +1093,6 @@ class Containernet( Mininet ):
         p.communicate()
 
         info("remove SAP NAT rules for: {0} - {1}\n".format(SAPSwitch.name, SAPNet))
-
-
-    def stop(self):
-        super(Containernet, self).stop()
-
-        info('*** Removing NAT rules of %i SAPs\n' % len(self.SAPswitches))
-        for SAPswitch in self.SAPswitches:
-            self.removeSAPNAT(self.SAPswitches[SAPswitch])
-        info("\n")
-
 
 
 class MininetWithControlNet( Mininet ):

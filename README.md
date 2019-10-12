@@ -6,7 +6,7 @@
 
 This fork of Mininet allows to use Docker containers as Mininet hosts. This enables interesting functionalities to built networking/cloud testbeds. The integration is done by subclassing the original Host class.
 
-Based on: **Mininet 2.3.0d5**
+Based on: **Mininet 2.3.0d6**
 
 * Containernet website: https://containernet.github.io/
 * Mininet website:  http://mininet.org

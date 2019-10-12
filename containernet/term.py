@@ -53,7 +53,7 @@ def makeTerm( node, title='Node', term='xterm', display=None, cmd='bash'):
         return
     # Docker Hosts don't have DISPLAY. So instead of
     # X11 tunnel, we use terminals from outside Docker
-    from mininet.node import Docker
+    from containernet.node import Docker
     if isinstance( node, Docker ):
         if not node._is_container_running():
             return []

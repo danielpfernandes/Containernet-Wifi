@@ -1,11 +1,13 @@
-MININET = mininet/*.py
-TEST = mininet/test/*.py
-EXAMPLES = mininet/examples/*.py
+MININET = mininet/mininet/*.py
+MININET_WIFI = mn_wifi/*.py
+MININET_CON = containernet/*.py
+TEST = containernet/test/*.py
+EXAMPLES = containernet/examples/*.py
 MN = bin/mn
 PYTHON ?= python
 PYMN = $(PYTHON) -B bin/mn
 BIN = $(MN)
-PYSRC = $(MININET) $(TEST) $(EXAMPLES) $(BIN)
+PYSRC = $(MININET) $(MININET_WIFI) $(MININET_CON) $(TEST) $(EXAMPLES) $(BIN)
 MNEXEC = mnexec
 MANPAGES = mn.1 mnexec.1
 P8IGN = E251,E201,E302,E202,E126,E127,E203,E226
@@ -37,15 +39,15 @@ errcheck: $(PYSRC)
 
 test: $(MININET) $(TEST)
 	-echo "Running tests"
-	mininet/test/test_nets.py
-	mininet/test/test_hifi.py
+	containernet/test/test_nets.py
+	containernet/test/test_hifi.py
 
 slowtest: $(MININET)
 	-echo "Running slower tests (walkthrough, examples)"
-	mininet/test/test_walkthrough.py -v
-	mininet/examples/test/runner.py -v
+	containernet/test/test_walkthrough.py -v
+	containernet/examples/test/runner.py -v
 
-mnexec: mnexec.c $(MN) mininet/net.py
+mnexec: mnexec.c $(MN) containernet/net.py
 	cc $(CFLAGS) $(LDFLAGS) -DVERSION=\"`PYTHONPATH=. $(PYMN) --version`\" $< -o $@
 
 install-mnexec: $(MNEXEC)

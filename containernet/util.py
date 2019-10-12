@@ -13,16 +13,39 @@ import os
 from functools import partial
 import sys
 
-# Python 2/3 compatibility
+
 Python3 = sys.version_info[0] == 3
 BaseString = str if Python3 else getattr( str, '__base__' )
 Encoding = 'utf-8' if Python3 else None
-def decode( s ):
-    "Decode a byte string if needed for Python 3"
-    return s.decode( Encoding ) if Python3 else s
-def encode( s ):
-    "Encode a byte string if needed for Python 3"
-    return s.encode( Encoding ) if Python3 else s
+class NullCodec( object ):
+    "Null codec for Python 2"
+    @staticmethod
+    def decode( buf ):
+        "Null decode"
+        return buf
+
+    @staticmethod
+    def encode( buf ):
+        "Null encode"
+        return buf
+
+
+if Python3:
+    def decode( buf ):
+        "Decode buffer for Python 3"
+        return buf.decode( Encoding )
+
+    def encode( buf ):
+        "Encode buffer for Python 3"
+        return buf.encode( Encoding )
+    getincrementaldecoder = codecs.getincrementaldecoder( Encoding )
+else:
+    decode, encode = NullCodec.decode, NullCodec.encode
+
+    def getincrementaldecoder():
+        "Return null codec for Python 2"
+        return NullCodec
+
 try:
     # pylint: disable=import-error
     oldpexpect = None

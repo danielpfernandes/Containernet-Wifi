@@ -180,6 +180,28 @@ function mn_deps {
 
     echo "Installing Mininet core"
     pushd $MININET_DIR/containernet
+    if [ -d mininet ]; then
+      echo "Removing mininet dir..."
+      rm -r mininet
+    fi
+    sudo git clone --depth=1 https://github.com/mininet/mininet.git
+    pushd $MININET_DIR/containernet/mininet
+    sudo PYTHON=${PYTHON} make install
+    popd
+
+    echo "Installing Mininet-WiFi core"
+    pushd $MININET_DIR/containernet
+    if [ -d mininet-wifi ]; then
+      echo "Removing Mininet-WiFi dir..."
+      rm -r mininet-wifi
+    fi
+    sudo git clone --depth=1 https://github.com/intrig-unicamp/mininet-wifi.git
+    pushd $MININET_DIR/containernet/mininet-wifi
+    sudo util/install.sh -Wlnfv
+    sudo PYTHON=${PYTHON} make install
+    popd
+
+    pushd $MININET_DIR/containernet
     sudo PYTHON=${PYTHON} make install
     popd
 }

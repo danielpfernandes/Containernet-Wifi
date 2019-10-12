@@ -26,29 +26,11 @@ import shlex
 
 from mininet.log import info
 from mininet.term import cleanUpScreens
+from mininet.clean import sh, killprocs
 from mininet.util import decode
-from mininet.net import SAP_PREFIX
+from containernet.net import SAP_PREFIX
+from mn_wifi.clean import Cleanup as Cleanup_nm_wifi
 
-def sh( cmd ):
-    "Print a command and send it to the shell"
-    info( cmd + '\n' )
-    result = Popen( [ '/bin/sh', '-c', cmd ], stdout=PIPE ).communicate()[ 0 ]
-    return decode( result )
-
-def killprocs( pattern ):
-    "Reliably terminate processes matching a pattern (including args)"
-    sh( 'pkill -9 -f %s' % pattern )
-    # Make sure they are gone
-    while True:
-        try:
-            pids = co( [ 'pgrep', '-f', pattern ] )
-        except CalledProcessError:
-            pids = ''
-        if pids:
-            sh( 'pkill -9 -f %s' % pattern )
-            time.sleep( .5 )
-        else:
-            break
 
 class Cleanup( object ):
     "Wrapper for cleanup()"
@@ -60,7 +42,9 @@ class Cleanup( object ):
         """Clean up junk which might be left over from old runs;
            do fast stuff before slow dp and link removal!"""
 
-        info( "*** Removing excess controllers/ofprotocols/ofdatapaths/"
+        Cleanup_nm_wifi.cleanup_wifi()
+
+        info( "**** Removing excess controllers/ofprotocols/ofdatapaths/"
               "pings/noxes\n" )
         zombies = ( 'controller ofprotocol ofdatapath ping nox_core'
                     'lt-nox_core ovs-openflowd ovs-controller'

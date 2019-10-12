@@ -8,11 +8,11 @@ from os.path import join
 # Get version number from source tree
 import sys
 sys.path.append( '.' )
-from mininet.net import CONTAINERNET_VERSION
+from containernet.net import CONTAINERNET_VERSION
 
 scripts = [ join( 'bin', filename ) for filename in [ 'mn' ] ]
 
-modname = distname = 'mininet'
+modname = distname = 'mn-con'
 
 setup(
     name=distname,
@@ -20,7 +20,7 @@ setup(
     description='Mininet fork that adds Container support.',
     author='Manuel Peuster',
     author_email='manuel.peuster@upb.de',
-    packages=[ 'mininet', 'mininet.examples' ],
+    packages=[ 'containernet', 'containernet.examples' ],
     long_description="""
         Mininet is a network emulator which uses lightweight
         virtualization to create virtual networks for rapid
