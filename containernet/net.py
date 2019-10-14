@@ -103,15 +103,15 @@ from mininet.log import info, error, debug, output, warn
 from mininet.node import ( Node, Host, OVSKernelSwitch,
                            DefaultController, Controller, OVSSwitch, OVSBridge )
 from mininet.nodelib import NAT
-from containernet.cli import CLI
-from containernet.node import Docker
-from mininet.link import Link, Intf, TCLink
 from mininet.util import ( quietRun, fixLimits, numCores, ensureRoot,
                                 macColonHex, ipStr, ipParse, netParse, ipAdd,
                                 waitListening, BaseString )
+from containernet.cli import CLI
+from containernet.node import Docker
 from containernet.term import cleanUpScreens, makeTerms
+from containernet.link import Link, Intf
 from mn_wifi.net import Mininet_wifi
-from mn_wifi.node import OVSKernelAP
+from mn_wifi.node import OVSKernelAP, Station, AP
 from subprocess import Popen
 
 # Mininet version: should be consistent with README and LICENSE
@@ -126,6 +126,7 @@ class Containernet( Mininet_wifi ):
     "Network emulation with hosts spawned in network namespaces."
 
     def __init__( self, topo=None, switch=OVSKernelSwitch, host=Host,
+                  station=Station, accessPoint=OVSKernelAP,
                   controller=DefaultController, link=Link, intf=Intf,
                   build=True, xterms=False, cleanup=False, ipBase='10.0.0.0/8',
                   inNamespace=False, autoSetMacs=False, autoStaticArp=False,
@@ -152,6 +153,8 @@ class Containernet( Mininet_wifi ):
         self.topo = topo
         self.switch = switch
         self.host = host
+        self.station = station
+        self.accessPoint = accessPoint
         self.controller = controller
         self.link = link
         self.intf = intf
@@ -253,16 +256,18 @@ class Containernet( Mininet_wifi ):
         if not isinstance( name, BaseString ) and name is not None:
             name = name.name  # if we get a host object
         try:
-            h = self.get(name)
+            n = self.get(name)
         except:
             error("Host: %s not found. Cannot remove it.\n" % name)
             return False
-        if h is not None:
-            if h in self.hosts:
-                self.hosts.remove(h)
+        if n is not None:
+            if n in self.hosts:
+                self.hosts.remove(n)
+            if n in self.stations:
+                self.stations.remove(n)
             if name in self.nameToNode:
                 del self.nameToNode[name]
-            h.stop( deleteIntfs=True )
+            n.stop( deleteIntfs=True )
             debug("Removed: %s\n" % name)
             return True
         return False
@@ -273,9 +278,11 @@ class Containernet( Mininet_wifi ):
            nodes: optional list to delete from (e.g. self.hosts)"""
         if nodes is None:
             nodes = ( self.hosts if node in self.hosts else
-                      ( self.switches if node in self.switches else
-                        ( self.controllers if node in self.controllers else
-                          [] ) ) )
+                      (self.stations if node in self.stations else
+                       (self.aps if node in self.aps else
+                        ( self.switches if node in self.switches else
+                         ( self.controllers if node in self.controllers else
+                              [] ) ) ) ) )
         node.stop( deleteIntfs=True )
         node.terminate()
         nodes.remove( node )
@@ -336,13 +343,13 @@ class Containernet( Mininet_wifi ):
 
     def __iter__( self ):
         "return iterator over node names"
-        for node in chain( self.hosts, self.switches, self.controllers ):
+        for node in chain( self.hosts, self.stations, self.aps, self.switches, self.controllers ):
             yield node.name
 
     def __len__( self ):
         "returns number of nodes in net"
-        return ( len( self.hosts ) + len( self.switches ) +
-                 len( self.controllers ) )
+        return ( len( self.hosts ) + len( self.stations ) + len( self.switches ) +
+                 len( self.aps ) + len( self.controllers ) )
 
     def __contains__( self, item ):
         "returns True if net contains named node"
@@ -391,7 +398,6 @@ class Containernet( Mininet_wifi ):
         options.setdefault( 'addr1', self.randMac() )
         options.setdefault( 'addr2', self.randMac() )
         cls = self.link if cls is None else cls
-        cls = TCLink
         link = cls( node1, node2, **options )
 
         # Allow to add links at runtime
@@ -555,6 +561,8 @@ class Containernet( Mininet_wifi ):
         self.terms += makeTerms( self.controllers, 'controller' )
         self.terms += makeTerms( self.switches, 'switch' )
         self.terms += makeTerms( self.hosts, 'host' )
+        self.terms += makeTerms(self.stations, 'station')
+        self.terms += makeTerms(self.aps, 'ap')
 
     def stopXterms( self ):
         "Kill each xterm."

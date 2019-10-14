@@ -2,10 +2,11 @@
 """
 This is the most simple example to showcase Containernet.
 """
-from containernet.net import Containernet #, Docker
-from containernet.node import Docker
+from containernet.net import Containernet
+from containernet.node import DockerSta
 from containernet.cli import CLI
-from containernet.link import TCLink
+from containernet.term import makeTerm, cleanUpScreens
+from mininet.link import TCLink
 from mininet.node import Controller
 from mininet.log import info, setLogLevel
 
@@ -15,9 +16,9 @@ def topology():
 
     info('*** Adding docker containers\n')
     sta1 = net.addStation('sta1', ip='10.0.0.3', mac='00:02:00:00:00:10',
-                         cls=Docker, dimage="ubuntu:trusty", cpu_shares=20)
+                          cls=DockerSta, dimage="ubuntu:trusty", cpu_shares=20)
     sta2 = net.addStation('sta2', ip='10.0.0.4', mac='00:02:00:00:00:11',
-                         cls=Docker, dimage="ubuntu:trusty", cpu_shares=20)
+                          cls=DockerSta, dimage="ubuntu:trusty", cpu_shares=20)
 
     ap1 = net.addAccessPoint('ap1')
     c0 = net.addController('c0')
@@ -28,6 +29,9 @@ def topology():
     info('*** Starting network\n')
     net.start()
     ap1.start([c0])
+
+    makeTerm(sta1, cmd="bash -c 'apt-get update && apt-get install iw;'")
+    makeTerm(sta2, cmd="bash -c 'apt-get update && apt-get install iw;'")
 
     sta1.cmd('iw dev sta1-wlan0 connect new-ssid')
     sta2.cmd('iw dev sta2-wlan0 connect new-ssid')

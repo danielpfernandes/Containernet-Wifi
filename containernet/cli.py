@@ -37,8 +37,8 @@ import os
 import atexit
 import string
 
+from containernet.term import makeTerms, runX11
 from mininet.log import info, output, error
-from mininet.term import makeTerms, runX11
 from mininet.util import ( quietRun, dumpNodeConnections,
                            dumpPorts )
 
