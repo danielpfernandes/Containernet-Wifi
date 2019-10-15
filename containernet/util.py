@@ -12,6 +12,7 @@ from os import O_NONBLOCK
 import os
 from functools import partial
 import sys
+import codecs
 
 
 Python3 = sys.version_info[0] == 3

@@ -6,11 +6,10 @@ how to create docker containers (based on existing images)
 to it.
 """
 
-from mininet.net import Containernet
-from mininet.node import Controller, Docker, OVSSwitch
-from mininet.cli import CLI
+from containernet.net import Containernet
+from containernet.cli import CLI
+from mininet.node import Controller
 from mininet.log import setLogLevel, info
-from mininet.link import TCLink, Link
 
 
 def topology():

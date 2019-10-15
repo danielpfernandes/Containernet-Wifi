@@ -5,8 +5,7 @@ This is the most simple example to showcase Containernet.
 from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.cli import CLI
-from containernet.term import makeTerm, cleanUpScreens
-from mininet.link import TCLink
+from containernet.term import makeTerm
 from mininet.node import Controller
 from mininet.log import info, setLogLevel
 

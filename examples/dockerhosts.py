@@ -6,17 +6,16 @@ how to create docker containers (based on existing images)
 to it.
 """
 
-from mininet.net import Containernet
-from mininet.node import Controller, Docker, OVSSwitch
-from mininet.cli import CLI
+from containernet.net import Containernet
+from containernet.node import Docker
+from containernet.cli import CLI
+from mininet.node import Controller, OVSSwitch
 from mininet.log import setLogLevel, info
-from mininet.link import TCLink, Link
 
 
 def topology():
 
     "Create a network with some docker containers acting as hosts."
-
     net = Containernet(controller=Controller)
 
     info('*** Adding controller\n')
@@ -32,7 +31,7 @@ def topology():
     d3 = net.addHost(
         'd3', ip='11.0.0.253', cls=Docker, dimage="ubuntu:trusty", cpu_shares=20)
     # using advanced features like volumes and exposed ports
-    d5 = net.addDocker('d5', dimage="ubuntu:trusty", volumes=["/:/mnt/vol1:rw"], ports=[9999], port_bindings={9999:9999}, publish_all_ports=True)
+    net.addDocker('d5', dimage="ubuntu:trusty", volumes=["/:/mnt/vol1:rw"], ports=[9999], port_bindings={9999:9999}, publish_all_ports=True)
 
     info('*** Adding switch\n')
     s1 = net.addSwitch('s1')

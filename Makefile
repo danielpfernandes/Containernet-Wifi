@@ -1,5 +1,5 @@
 MININET = mininet/mininet/*.py
-MININET_WIFI = mn_wifi/*.py
+MININET_WIFI = mininet-wifi/mn_wifi/*.py
 MININET_CON = containernet/*.py
 TEST = containernet/test/*.py
 EXAMPLES = containernet/examples/*.py

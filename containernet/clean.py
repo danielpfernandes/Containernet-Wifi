@@ -15,8 +15,7 @@ try:
 	from builtins import str
 except ImportError:
 	pass
-from subprocess import ( Popen, PIPE, check_output as co,
-                         CalledProcessError )
+from subprocess import Popen
 from subprocess import call
 import time
 import os
@@ -27,7 +26,6 @@ import shlex
 from mininet.log import info
 from mininet.term import cleanUpScreens
 from mininet.clean import sh, killprocs
-from mininet.util import decode
 from containernet.net import SAP_PREFIX
 from mn_wifi.clean import Cleanup as Cleanup_nm_wifi
 
