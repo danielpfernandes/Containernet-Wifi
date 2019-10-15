@@ -1,4 +1,4 @@
-MININET = mininet/mininet/*.py
+MININET = mininet-wifi/mininet/mininet/*.py
 MININET_WIFI = mininet-wifi/mn_wifi/*.py
 MININET_CON = containernet/*.py
 TEST = containernet/test/*.py
