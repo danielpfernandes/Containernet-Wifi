@@ -111,7 +111,7 @@ from containernet.node import Docker
 from containernet.term import cleanUpScreens, makeTerms
 from containernet.link import Link, Intf
 from mn_wifi.net import Mininet_wifi
-from mn_wifi.node import OVSKernelAP, Station, AP
+from mn_wifi.node import OVSKernelAP, Station
 from subprocess import Popen
 
 # Mininet version: should be consistent with README and LICENSE

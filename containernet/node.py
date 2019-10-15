@@ -217,7 +217,7 @@ class Docker ( Host ):
             try:
                 cmd_field.remove(u'/bin/sh')
                 cmd_field.remove(u'-c')
-            except ValueError as ex:
+            except ValueError:
                 pass
             # we just add the entryp. commands to the beginning:
             cmd_field = entryp_field + cmd_field
@@ -324,7 +324,7 @@ class Docker ( Host ):
             return
         try:
             self.dcli.remove_container(self.dc, force=True, v=True)
-        except docker.errors.APIError as e:
+        except docker.errors.APIError:
             warn("Warning: API error during container removal.\n")
 
         self.cleanup()
@@ -716,7 +716,7 @@ class DockerSta ( Station ):
             try:
                 cmd_field.remove(u'/bin/sh')
                 cmd_field.remove(u'-c')
-            except ValueError as ex:
+            except ValueError:
                 pass
             # we just add the entryp. commands to the beginning:
             cmd_field = entryp_field + cmd_field
@@ -823,7 +823,7 @@ class DockerSta ( Station ):
             return
         try:
             self.dcli.remove_container(self.dc, force=True, v=True)
-        except docker.errors.APIError as e:
+        except docker.errors.APIError:
             warn("Warning: API error during container removal.\n")
 
         self.cleanup()
