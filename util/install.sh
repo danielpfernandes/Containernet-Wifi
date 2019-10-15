@@ -178,17 +178,6 @@ function mn_deps {
         $install iproute2 || $install iproute
     fi
 
-    echo "Installing Mininet core"
-    pushd $MININET_DIR/containernet
-    if [ -d mininet ]; then
-      echo "Removing mininet dir..."
-      rm -r mininet
-    fi
-    sudo git clone --depth=1 https://github.com/mininet/mininet.git
-    pushd $MININET_DIR/containernet/mininet
-    sudo PYTHON=${PYTHON} make install
-    popd
-
     echo "Installing Mininet-WiFi core"
     pushd $MININET_DIR/containernet
     if [ -d mininet-wifi ]; then
