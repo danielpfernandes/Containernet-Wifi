@@ -37,12 +37,12 @@ errcheck: $(PYSRC)
 	pyflakes $(PYSRC)
 	pylint -E --rcfile=.pylint $(PYSRC)
 
-test: $(MININET) $(TEST)
+test: $(MININET_CON) $(TEST)
 	-echo "Running tests"
 	containernet/test/test_nets.py
 	containernet/test/test_hifi.py
 
-slowtest: $(MININET)
+slowtest: $(MININET_CON)
 	-echo "Running slower tests (walkthrough, examples)"
 	containernet/test/test_walkthrough.py -v
 	containernet/examples/test/runner.py -v
