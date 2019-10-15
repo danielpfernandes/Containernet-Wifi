@@ -1,16 +1,12 @@
 import pytest
 import unittest
 import os
-import time
 import subprocess
 import docker
-from mininet.net import Containernet
-from mininet.node import Host, Controller, OVSSwitch, Docker
+from containernet.net import Containernet
+from containernet.clean import cleanup
+from mininet.node import Controller
 from mininet.link import TCLink
-from mininet.topo import SingleSwitchTopo, LinearTopo
-from mininet.log import setLogLevel
-from mininet.util import quietRun
-from mininet.clean import cleanup
 
 
 class simpleTestTopology( unittest.TestCase ):
