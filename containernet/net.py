@@ -115,7 +115,7 @@ from mn_wifi.node import OVSKernelAP, Station, AP
 from subprocess import Popen
 
 # Mininet version: should be consistent with README and LICENSE
-VERSION = "2.3.0d5"
+VERSION = "2.3.0d6"
 CONTAINERNET_VERSION = "3.0"
 
 # If an external SAP (Service Access Point) is made, it is deployed with this prefix in the name,

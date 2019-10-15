@@ -12,7 +12,7 @@ from containernet.net import CONTAINERNET_VERSION
 
 scripts = [ join( 'bin', filename ) for filename in [ 'mn' ] ]
 
-modname = distname = 'mn-con'
+modname = distname = 'containernet'
 
 setup(
     name=distname,
