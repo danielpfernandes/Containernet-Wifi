@@ -62,10 +62,7 @@ There is an extension of Containernet called [vim-emu](https://osm.etsi.org/wiki
 
 ---
 ## Installation
-
-Containernet comes with three installation and deployment options.
-
-### Option 1: Bare-metal installation
+### Bare-metal installation
 
 Automatic installation is provided through an Ansible playbook.
 * Requires: **Ubuntu Linux 16.04 LTS**
@@ -78,56 +75,6 @@ Automatic installation is provided through an Ansible playbook.
     $ sudo python setup.py install
     ```
     Wait (and have a coffee) ...
-
-### Option 2: Nested Docker deployment
-
-Containernet can be executed within a privileged Docker container (nested container deployment). There is also a pre-build Docker image available on [Docker Hub](https://hub.docker.com/r/containernet/containernet/).
-
-```bash
-# build the container locally
-$ docker build -t containernet .
-```
-
-```bash
-# or pull the latest pre-build container
-$ docker pull containernet/containernet
-```
-
-```bash
-# run the container
-$ docker run --name containernet -it --rm --privileged --pid='host' -v /var/run/docker.sock:/var/run/docker.sock containernet/containernet /bin/bash
-```
-
-### Option 3: Vagrant-based VM creation
-
-#### There are to diffrent ways to use Vagrant.
-
-#### 1. in the Containernet directory
-
-If you run the following commands in the cloned repository.
-```bash
-$ vagrant up
-$ vagrant ssh
-```
-You will get a VM that has the full directory structure sync with `/home/ubuntu/containernet`. If you want to contribute to the Containernet project. This is probably what you want.
-
-#### 2. in a seprate directory
-
-If you want to use Containernet as a dependancy in your own project. You can use:
-```bash
-$ curl https://raw.githubusercontent.com/containernet/containernet/master/StandaloneVagrantfile -o Vagrantfile
-```
-to download the `StandaloneVagrantfile`, which is automatically renamed to `Vagrantfile` by the curl command. This `Vagrantfile` will download all nessarry parts needed to get up and running. This means your project structure stays slim.
-
-To start the VM just run
-```bash
-$ vagrant up
-```
-After the VM has started, you can use the following command to login as `root`.
-```bash
-$ vagrant ssh
-```
-This is needed because mininet needs full access. If you use PyCharm Professional you can use the created VM as a remote interpreter.
 
 ### Usage / Run
 
