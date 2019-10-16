@@ -68,7 +68,7 @@ Automatic installation is provided through an Ansible playbook.
 * Requires: **Ubuntu Linux 16.04 LTS**
     ```bash
     $ sudo apt-get install ansible git aptitude
-    $ git clone https://github.com/containernet/containernet.git
+    $ git clone https://github.com/ramonfontes/containernet.git
     $ cd containernet/ansible
     $ sudo ansible-playbook -i "localhost," -c local install.yml
     $ cd ..
