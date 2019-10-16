@@ -21,7 +21,7 @@ if 'PYTHONPATH' in os.environ:
     sys.path = os.environ[ 'PYTHONPATH' ].split( ':' ) + sys.path
 
 from containernet.clean import cleanup
-import mininet.cli
+import containernet.cli
 from mininet.log import lg, LEVELS, info, debug, warn, error, output
 from mininet.net import Mininet, MininetWithControlNet, VERSION
 from mininet.node import ( Host, CPULimitedHost, Controller, OVSController,
@@ -378,7 +378,7 @@ class MininetRunner( object ):
             host, switch, link = RemoteHost, RemoteOVSSwitch, RemoteLink
             Net = partial( MininetCluster, servers=servers,
                            placement=PLACEMENT[ opts.placement ] )
-            mininet.cli.CLI = ClusterCLI
+            containernet.cli.CLI = ClusterCLI
 
         mn = Net( topo=topo,
                   switch=switch, host=host, controller=controller, link=link,
@@ -395,7 +395,7 @@ class MininetRunner( object ):
             mn.addNAT( *opts.nat_args, **opts.nat_kwargs ).configDefault()
 
         # --custom files can set CLI or change mininet.cli.CLI
-        CLI = mininet.cli.CLI if CLI is None else CLI
+        CLI = containernet.cli.CLI if CLI is None else CLI
 
         if opts.pre:
             CLI( mn, script=opts.pre )
