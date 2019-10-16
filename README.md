@@ -75,7 +75,7 @@ Automatic installation is provided through an Ansible playbook.
     $ cd containernet/ansible
     $ sudo ansible-playbook -i "localhost," -c local install.yml
     $ cd ..
-    $ sudo util/install.sh -n
+    $ sudo python setup.py install
     ```
     Wait (and have a coffee) ...
 
