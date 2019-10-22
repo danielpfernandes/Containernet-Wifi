@@ -4,10 +4,11 @@ This topology is used to test the compatibility of different Docker images.
 The images to be tested can be found in 'examples/example-containers'.
 They are build with './build.sh'
 """
-from containernet.net import Containernet
-from containernet.cli import CLI
 from mininet.node import Controller
 from mininet.log import info, setLogLevel
+from containernet.cli import CLI
+from containernet.net import Containernet
+
 setLogLevel('info')
 
 net = Containernet(controller=Controller)

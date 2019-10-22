@@ -2,11 +2,12 @@
 """
 Example to test the automated CMD field execution feature.
 """
-from mininet.net import Containernet
 from mininet.node import Controller
-from mininet.cli import CLI
-from mininet.link import TCLink
 from mininet.log import info, setLogLevel
+from containernet.cli import CLI
+from containernet.link import TCLink
+from containernet.net import Containernet
+
 setLogLevel('info')
 
 net = Containernet(controller=Controller)
