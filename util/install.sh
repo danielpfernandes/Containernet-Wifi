@@ -162,21 +162,27 @@ function kernel_clean {
 # Install Mininet deps
 function mn_deps {
     echo "Installing Mininet dependencies"
-    if [ "$DIST" = "Fedora" -o "$DIST" = "RedHatEnterpriseServer" -o "$DIST" = "CentOS" ]; then
-        $install gcc make socat psmisc xterm openssh-clients iperf \
-            iproute telnet python-setuptools libcgroup-tools \
-            ethtool help2man pyflakes pylint python-pep8 python-pexpect
-    elif [ "$DIST" = "SUSE LINUX"  ]; then
-		$install gcc make socat psmisc xterm openssh iperf \
-			iproute telnet ${PYPKG}-setuptools libcgroup-tools \
-			ethtool help2man python-pyflakes python3-pylint \
-                        python-pep8 ${PYPKG}-pexpect ${PYPKG}-tk
-    else  # Debian/Ubuntu
-        $install gcc make socat psmisc xterm ssh iperf telnet \
-                 cgroup-bin ethtool help2man pyflakes pylint pep8 \
-                 ${PYPKG}-setuptools ${PYPKG}-pexpect ${PYPKG}-tk
-        $install iproute2 || $install iproute
+
+    echo "Installing Mininet core"
+    pushd $MININET_DIR/containernet
+    if [ -d mininet ]; then
+      echo "Removing Mininet dir..."
+      rm -r mininet
     fi
+    sudo git clone --depth=1 https://github.com/mininet/mininet.git
+    pushd $MININET_DIR/containernet/mininet
+    sudo util/install.sh -nfv
+    sudo PYTHON=${PYTHON} make install
+    popd
+
+    pushd $MININET_DIR/containernet
+    sudo PYTHON=${PYTHON} make install
+    popd
+}
+
+# Install Mininet-WiFi deps
+function mn_wifi_deps {
+    echo "Installing Mininet/Mininet-WiFi dependencies"
 
     echo "Installing Mininet-WiFi core"
     pushd $MININET_DIR/containernet
@@ -763,6 +769,7 @@ function all {
     pre_build
     kernel
     mn_deps
+    mn_wifi_deps
     # Skip mn_dev (doxypy/texlive/fonts/etc.) because it's huge
     # mn_dev
     of
@@ -826,7 +833,7 @@ exit 0
 }
 
 function usage {
-    printf '\nUsage: %s [-abcdfhikmnprtvVwxy03]\n\n' $(basename $0) >&2
+    printf '\nUsage: %s [-abcdfhikmnprtvVwWxy03]\n\n' $(basename $0) >&2
 
     printf 'This install script attempts to install useful packages\n' >&2
     printf 'for Mininet. It should (hopefully) work on Ubuntu 11.10+\n' >&2
@@ -866,7 +873,7 @@ if [ $# -eq 0 ]
 then
     all
 else
-    while getopts 'abcdefhikmnprs:tvV:wxy03' OPTION
+    while getopts 'abcdefhikmnprs:tvV:wWxy03' OPTION
     do
       case $OPTION in
       a)    all;;
@@ -894,6 +901,7 @@ else
       V)    OVS_RELEASE=$OPTARG;
             ubuntuOvs;;
       w)    install_wireshark;;
+      W)    mn_wifi_deps;;
       x)    case $OF_VERSION in
             1.0) nox;;
             1.3) nox13;;
