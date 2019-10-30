@@ -5,8 +5,9 @@ import subprocess
 import docker
 from containernet.net import Containernet
 from containernet.clean import cleanup
+from containernet.link import TCLink
 from mininet.node import Controller
-from mininet.link import TCLink
+
 
 
 class simpleTestTopology( unittest.TestCase ):
