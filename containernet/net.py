@@ -98,6 +98,7 @@ from subprocess import Popen
 from time import sleep
 from itertools import chain, groupby
 from math import ceil
+from six import string_types
 
 from mininet.net import Mininet
 from mininet.link import TCULink
