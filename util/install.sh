@@ -217,21 +217,17 @@ function mn_dev {
 function of {
     echo "Installing OpenFlow reference implementation..."
     cd $BUILD_DIR
-    $install autoconf automake libtool make gcc
-    if [ "$DIST" = "Fedora" -o "$DIST" = "RedHatEnterpriseServer" -o "$DIST" = "CentOS" ]; then
+    $install autoconf automake libtool make gcc patch
+    if [ "$DIST" = "Fedora" ]; then
         $install git pkgconfig glibc-devel
-	elif [ "$DIST" = "SUSE LINUX"  ]; then
-       $install git pkgconfig glibc-devel
     else
         $install git-core autotools-dev pkg-config libc6-dev
     fi
-    # was: git clone git://openflowswitch.org/openflow.git
-    # Use our own fork on github for now:
-    git clone git://github.com/mininet/openflow
+    git clone --depth=1 https://github.com/mininet/openflow
     cd $BUILD_DIR/openflow
 
     # Patch controller to handle more than 16 switches
-    patch -p1 < $MININET_DIR/containernet/util/openflow-patches/controller.patch
+    patch -p1 < $MININET_DIR/mininet-wifi/util/openflow-patches/controller.patch
 
     # Resume the install:
     ./boot.sh
@@ -244,36 +240,32 @@ function of {
 function of13 {
     echo "Installing OpenFlow 1.3 soft switch implementation..."
     cd $BUILD_DIR/
-    $install git-core autoconf automake autotools-dev pkg-config \
-        make gcc g++ libtool libc6-dev cmake libpcap-dev  \
+    $install  git-core autoconf automake autotools-dev pkg-config \
+        make gcc g++ libtool libc6-dev cmake libpcap-dev libxerces-c3-dev  \
         unzip libpcre3-dev flex bison libboost-dev
-    if [ "$DIST" = "Ubuntu" ] && version_le $RELEASE 16.04; then
-        $install libxerces-c2-dev
-    else
-        $install libxerces-c-dev
-    fi
 
     if [ ! -d "ofsoftswitch13" ]; then
-        git clone https://github.com/CPqD/ofsoftswitch13.git
         if [[ -n "$OF13_SWITCH_REV" ]]; then
+            git clone https://github.com/CPqD/ofsoftswitch13.git
             cd ofsoftswitch13
             git checkout ${OF13_SWITCH_REV}
             cd ..
+        else
+            git clone --depth=1 https://github.com/CPqD/ofsoftswitch13.git
         fi
     fi
 
     # Install netbee
-    if [ ! -d "netbee" ]; then
-        git clone https://github.com/netgroup-polito/netbee.git
-    fi
-    cd netbee/src
+    NBEEDIR="netbee"
+    git clone https://github.com/netgroup-polito/netbee.git
+    cd ${NBEEDIR}/src
     cmake .
     make
 
-    cd $BUILD_DIR
-    sudo cp netbee/bin/libn*.so /usr/local/lib
+    cd $BUILD_DIR/
+    sudo cp ${NBEEDIR}/bin/libn*.so /usr/local/lib
     sudo ldconfig
-    sudo cp -R netbee/include/ /usr/
+    sudo cp -R ${NBEEDIR}/include/ /usr/
 
     # Resume the install:
     cd $BUILD_DIR/ofsoftswitch13
@@ -497,7 +489,7 @@ function ivs {
 
     # Install IVS from source
     cd $BUILD_DIR
-    git clone git://github.com/floodlight/ivs $IVS_SRC
+    git clone https://github.com/floodlight/ivs $IVS_SRC
     cd $IVS_SRC
     git submodule update --init
     make
@@ -525,7 +517,7 @@ function ryu {
     fi
     # fetch RYU
     cd $BUILD_DIR/
-    git clone git://github.com/osrg/ryu.git ryu
+    git clone https://github.com/osrg/ryu ryu
     cd ryu
 
     # install ryu
@@ -635,7 +627,7 @@ function oftest {
 
     # Install oftest:
     cd $BUILD_DIR/
-    git clone git://github.com/floodlight/oftest
+    git clone https://github.com/floodlight/oftest
 }
 
 # Install cbench
@@ -652,7 +644,7 @@ function cbench {
     cd $BUILD_DIR/
     # was:  git clone git://gitosis.stanford.edu/oflops.git
     # Use our own fork on github for now:
-    git clone git://github.com/mininet/oflops
+    git clone https://github.com/mininet/oflops
     cd oflops
     sh boot.sh || true # possible error in autoreconf, so run twice
     sh boot.sh
