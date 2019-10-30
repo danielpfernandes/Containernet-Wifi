@@ -100,9 +100,10 @@ from itertools import chain, groupby
 from math import ceil
 
 from mininet.net import Mininet
+from mininet.link import TCULink
 from mininet.log import info, error, debug, output, warn
 from mininet.node import ( Node, Host, OVSKernelSwitch,
-                           DefaultController, Controller, OVSSwitch, OVSBridge )
+                           DefaultController, Controller, OVSBridge )
 from mininet.nodelib import NAT
 from mininet.util import ( quietRun, fixLimits, numCores, ensureRoot,
                                 macColonHex, ipStr, ipParse, netParse, ipAdd,
@@ -110,27 +111,19 @@ from mininet.util import ( quietRun, fixLimits, numCores, ensureRoot,
 from containernet.cli import CLI
 from containernet.node import Docker
 from containernet.term import cleanUpScreens, makeTerms
-from containernet.link import Link, Intf
+from containernet.link import TCLink, Intf
 
 from mn_wifi.net import Mininet_wifi
-from mn_wifi.node import AccessPoint, AP, Station, Car, \
-    OVSKernelAP, physicalAP
-from mn_wifi.wmediumdConnector import error_prob, snr, interference
-from mn_wifi.link import wirelessLink, wmediumd, Association, \
-    _4address, TCWirelessLink, TCLinkWirelessStation, ITSLink, \
+from mn_wifi.node import AP, Station, Car, \
+    OVSKernelAP
+from mn_wifi.wmediumdConnector import snr, interference
+from mn_wifi.link import wmediumd, _4address, TCWirelessLink, ITSLink, \
     wifiDirectLink, adhoc, mesh, physicalMesh, physicalWifiDirectLink
-from mn_wifi.clean import Cleanup as cleanup_mnwifi
-from mn_wifi.devices import CustomRate, DeviceRange
 from mn_wifi.energy import Energy
-from mn_wifi.telemetry import parseData, telemetry as run_telemetry
-from mn_wifi.mobility import tracked as trackedMob, model as mobModel, mobility as mob
-from mn_wifi.plot import plot2d, plot3d, plotGraph
-from mn_wifi.module import module
-from mn_wifi.propagationModels import propagationModel
-from mn_wifi.vanet import vanet
-from mn_wifi.sixLoWPAN.net import Mininet_6LoWPAN as sixlowpan
-from mn_wifi.sixLoWPAN.module import module as sixLoWPAN_module
+from mn_wifi.mobility import mobility as mob
+from mn_wifi.plot import plot2d
 from mn_wifi.sixLoWPAN.link import sixLoWPANLink
+
 
 # Mininet version: should be consistent with README and LICENSE
 VERSION = "2.3.0d6"
@@ -444,8 +437,8 @@ class Containernet( Mininet_wifi ):
         return macColonHex( random.randint(1, 2**48 - 1) & 0xfeffffffffff |
                             0x020000000000 )
 
-    def addLink( self, node1, node2, port1=None, port2=None,
-                 cls=None, **params ):
+    def addLink(self, node1, node2=None, port1=None, port2=None,
+                cls=None, **params):
         """"Add a link from node1 to node2
             node1: source node (or name)
             node2: dest node (or name)
@@ -454,32 +447,77 @@ class Containernet( Mininet_wifi ):
             cls: link class (optional)
             params: additional link params (optional)
             returns: link object"""
+
         # Accept node objects or names
-        node1 = node1 if not isinstance( node1, BaseString ) else self[ node1 ]
-        node2 = node2 if not isinstance( node2, BaseString ) else self[ node2 ]
-        options = dict( params )
-        # Port is optional
-        if port1 is not None:
-            options.setdefault( 'port1', port1 )
-        if port2 is not None:
-            options.setdefault( 'port2', port2 )
-        if self.intf is not None:
-            options.setdefault( 'intf', self.intf )
-        # Set default MAC - this should probably be in Link
-        options.setdefault( 'addr1', self.randMac() )
-        options.setdefault( 'addr2', self.randMac() )
+        node1 = node1 if not isinstance(node1, string_types) else self[node1]
+        node2 = node2 if not isinstance(node2, string_types) else self[node2]
+        options = dict(params)
+
+        self.conn.setdefault('src', [])
+        self.conn.setdefault('dst', [])
+        self.conn.setdefault('ls', [])
+
         cls = self.link if cls is None else cls
-        link = cls( node1, node2, **options )
 
-        # Allow to add links at runtime
-        # (needs attach method provided by OVSSwitch)
-        if isinstance( node1, OVSSwitch ):
-            node1.attach(link.intf1)
-        if isinstance( node2, OVSSwitch ):
-            node2.attach(link.intf2)
+        modes = [mesh, physicalMesh, adhoc, ITSLink,
+                 wifiDirectLink, physicalWifiDirectLink]
+        if cls in modes:
+            cls(node=node1, **params)
+        elif cls == sixLoWPANLink:
+            link = cls(node=node1, port=port1, **params)
+            self.links.append(link)
+            return link
+        elif cls == _4address:
+            if 'position' in node1.params and 'position' in node2.params:
+                self.conn['src'].append(node1)
+                self.conn['dst'].append(node2)
+                self.conn['ls'].append('--')
 
-        self.links.append( link )
-        return link
+            if node1 not in self.aps:
+                self.aps.append(node1)
+            elif node2 not in self.aps:
+                self.aps.append(node2)
+
+            if self.wmediumd_mode == interference:
+                link = cls(node1, node2, port1, port2)
+                self.links.append(link)
+                return link
+            else:
+                dist = node1.get_distance_to(node2)
+                if dist <= node1.params['range'][0]:
+                    link = cls(node1, node2)
+                    self.links.append(link)
+                    return link
+        elif ((node1 in self.stations and node2 in self.aps)
+              or (node2 in self.stations and node1 in self.aps)) and 'link' not in options:
+            self.infraAssociation(node1, node2, port1, port2, cls, **params)
+        else:
+            if 'link' in options:
+                options.pop('link', None)
+
+            if 'position' in node1.params and 'position' in node2.params:
+                self.conn['src'].append(node1)
+                self.conn['dst'].append(node2)
+                self.conn['ls'].append('-')
+            # Port is optional
+            if port1 is not None:
+                options.setdefault('port1', port1)
+            if port2 is not None:
+                options.setdefault('port2', port2)
+
+            # Set default MAC - this should probably be in Link
+            options.setdefault('addr1', self.randMac())
+            options.setdefault('addr2', self.randMac())
+
+            if not cls or cls == wmediumd or cls == TCWirelessLink:
+                cls = TCLink
+            if self.disable_tcp_checksum:
+                cls = TCULink
+
+            cls = self.link if cls is None else cls
+            link = cls(node1, node2, **options)
+            self.links.append(link)
+            return link
 
     def removeLink(self, link=None, node1=None, node2=None):
         """
