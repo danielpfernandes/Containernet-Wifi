@@ -103,14 +103,13 @@ from six import string_types
 from mininet.net import Mininet
 from mininet.link import TCULink
 from mininet.log import info, error, debug, output, warn
-from mininet.node import ( Node, Host, OVSKernelSwitch,
-                           DefaultController, Controller, OVSBridge )
+from mininet.node import ( Node, DefaultController, Controller, OVSBridge )
 from mininet.nodelib import NAT
 from mininet.util import ( quietRun, fixLimits, numCores, ensureRoot,
                                 macColonHex, ipStr, ipParse, netParse, ipAdd,
                                 waitListening, BaseString )
 from containernet.cli import CLI
-from containernet.node import Docker
+from containernet.node import Docker, OVSKernelSwitch, Host, OVSSwitch
 from containernet.term import cleanUpScreens, makeTerms
 from containernet.link import TCLink, Intf
 
@@ -524,6 +523,18 @@ class Containernet( Mininet_wifi ):
 
             cls = self.link if cls is None else cls
             link = cls(node1, node2, **options)
+
+            # Allow to add links at runtime
+            # (needs attach method provided by OVSSwitch)
+            if isinstance(node1, OVSSwitch):
+                node1.attach(link.intf1)
+            if isinstance(node2, OVSSwitch):
+                node2.attach(link.intf2)
+            if isinstance(node1, AP):
+                node1.attach(link.intf1)
+            if isinstance(node2, AP):
+                node2.attach(link.intf2)
+
             self.links.append(link)
             return link
 

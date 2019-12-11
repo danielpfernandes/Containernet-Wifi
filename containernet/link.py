@@ -19,8 +19,8 @@ Link: basic link class for creating veth pairs
 
 from mininet.log import info, error, debug
 from containernet.util import makeIntfPair
-import mininet.node
 import re
+
 
 class Intf( object ):
 
@@ -208,9 +208,9 @@ class Intf( object ):
         # quietRun( 'ip link del ' + self.name )
         self.node.delIntf( self )
         self.link = None
-
+        from containernet.node import OVSSwitch
         # call detach if we have a OVSSwitch (just to be sure)
-        if isinstance( self.node, mininet.node.OVSSwitch ):
+        if isinstance( self.node, OVSSwitch ):
             self.node.detach(self)
 
     def status( self ):
@@ -543,7 +543,8 @@ class OVSLink( Link ):
 
     def __init__( self, node1, node2, **kwargs ):
         "See Link.__init__() for options"
-        from mininet.node import OVSSwitch
+        from containernet.node import OVSSwitch
+        print "kkkkkkkkkkkkkk"
         self.isPatchLink = False
         if ( isinstance( node1, OVSSwitch ) and
              isinstance( node2, OVSSwitch ) ):

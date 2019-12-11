@@ -52,15 +52,21 @@ Future enhancements:
 - Create proxy objects for remote nodes (Mininet: Cluster Edition)
 """
 import os
+import re
 import pty
 import select
 import docker
 import json
 from subprocess import check_output
+from re import findall
 
 from mininet.node import Node, Host
+from mininet.moduledeps import moduleDeps, pathCheck, TUN
+from mininet.util import ( quietRun, errRun)
 from mininet.log import info, error, warn, debug
+from containernet.link import Intf, TCIntf, OVSIntf
 from mn_wifi.node import Station
+from distutils.version import StrictVersion
 
 
 class Docker ( Host ):
@@ -202,7 +208,6 @@ class Docker ( Host ):
 
         # let's initially set our resource limits
         self.update_resources(**self.resources)
-
 
     def start(self):
         # Containernet ignores the CMD field of the Dockerfile.
@@ -473,7 +478,6 @@ class Docker ( Host ):
         resources_filtered = {res:self.resources[res] for res in self.resources if self.resources[res] is not None}
         info("{1}: update resources {0}\n".format(resources_filtered, self.name))
         self.dcli.update_container(self.dc, **resources_filtered)
-
 
     def updateCpuLimit(self, cpu_quota=-1, cpu_period=-1, cpu_shares=-1, cores=None):
         """
@@ -974,7 +978,6 @@ class DockerSta ( Station ):
         info("{1}: update resources {0}\n".format(resources_filtered, self.name))
         self.dcli.update_container(self.dc, **resources_filtered)
 
-
     def updateCpuLimit(self, cpu_quota=-1, cpu_period=-1, cpu_shares=-1, cores=None):
         """
         Update CPU resource limitations.
@@ -1018,7 +1021,6 @@ class DockerSta ( Station ):
         if memswap_limit >= 0:
             self.resources['memswap_limit'] = self.cgroupSet("memsw.limit_in_bytes", memswap_limit, resource="memory")
 
-
     def cgroupSet(self, param, value, resource='cpu'):
         """
         Directly manipulate the resource settings of the Docker container's cgrpup.
@@ -1061,3 +1063,435 @@ class DockerSta ( Station ):
         except:
             error("Problem reading cgroup info: %r\n" % cmd)
             return -1
+
+
+class Switch( Node ):
+    """A Switch is a Node that is running (or has execed?)
+       an OpenFlow switch."""
+
+    portBase = 1  # Switches start with port 1 in OpenFlow
+    dpidLen = 16  # digits in dpid passed to switch
+
+    def __init__( self, name, dpid=None, opts='', listenPort=None, **params):
+        """dpid: dpid hex string (or None to derive from name, e.g. s1 -> 1)
+           opts: additional switch options
+           listenPort: port to listen on for dpctl connections"""
+        Node.__init__( self, name, **params )
+        self.dpid = self.defaultDpid( dpid )
+        self.opts = opts
+        self.listenPort = listenPort
+        if not self.inNamespace:
+            self.controlIntf = Intf( 'lo', self, port=0 )
+
+    def defaultDpid( self, dpid=None ):
+        "Return correctly formatted dpid from dpid or switch name (s1 -> 1)"
+        if dpid:
+            # Remove any colons and make sure it's a good hex number
+            dpid = dpid.replace( ':', '' )
+            assert len( dpid ) <= self.dpidLen and int( dpid, 16 ) >= 0
+        else:
+            # Use hex of the first number in the switch name
+            nums = re.findall( r'\d+', self.name )
+            if nums:
+                dpid = hex( int( nums[ 0 ] ) )[ 2: ]
+            else:
+                self.terminate()  # Python 3.6 crash workaround
+                raise Exception( 'Unable to derive default datapath ID - '
+                                 'please either specify a dpid or use a '
+                                 'canonical switch name such as s23.' )
+        return '0' * ( self.dpidLen - len( dpid ) ) + dpid
+
+    def defaultIntf( self ):
+        "Return control interface"
+        if self.controlIntf:
+            return self.controlIntf
+        else:
+            return Node.defaultIntf( self )
+
+    def sendCmd( self, *cmd, **kwargs ):
+        """Send command to Node.
+           cmd: string"""
+        kwargs.setdefault( 'printPid', False )
+        if not self.execed:
+            return Node.sendCmd( self, *cmd, **kwargs )
+        else:
+            error( '*** Error: %s has execed and cannot accept commands' %
+                   self.name )
+
+    def connected( self ):
+        "Is the switch connected to a controller? (override this method)"
+        # Assume that we are connected by default to whatever we need to
+        # be connected to. This should be overridden by any OpenFlow
+        # switch, but not by a standalone bridge.
+        debug( 'Assuming', repr( self ), 'is connected to a controller\n' )
+        return True
+
+    def stop( self, deleteIntfs=True ):
+        """Stop switch
+           deleteIntfs: delete interfaces? (True)"""
+        if deleteIntfs:
+            self.deleteIntfs()
+        self.terminate()
+
+    def __repr__( self ):
+        "More informative string representation"
+        intfs = ( ','.join( [ '%s:%s' % ( i.name, i.IP() )
+                              for i in self.intfList() ] ) )
+        return '<%s %s: %s pid=%s> ' % (
+            self.__class__.__name__, self.name, intfs, self.pid )
+
+
+class UserSwitch( Switch ):
+    "User-space switch."
+
+    dpidLen = 12
+
+    def __init__( self, name, dpopts='--no-slicing', **kwargs ):
+        """Init.
+           name: name for the switch
+           dpopts: additional arguments to ofdatapath (--no-slicing)"""
+        Switch.__init__( self, name, **kwargs )
+        pathCheck( 'ofdatapath', 'ofprotocol',
+                   moduleName='the OpenFlow reference user switch' +
+                              '(openflow.org)' )
+        if self.listenPort:
+            self.opts += ' --listen=ptcp:%i ' % self.listenPort
+        else:
+            self.opts += ' --listen=punix:/tmp/%s.listen' % self.name
+        self.dpopts = dpopts
+
+    @classmethod
+    def setup( cls ):
+        "Ensure any dependencies are loaded; if not, try to load them."
+        if not os.path.exists( '/dev/net/tun' ):
+            moduleDeps( add=TUN )
+
+    def dpctl( self, *args ):
+        "Run dpctl command"
+        listenAddr = None
+        if not self.listenPort:
+            listenAddr = 'unix:/tmp/%s.listen' % self.name
+        else:
+            listenAddr = 'tcp:127.0.0.1:%i' % self.listenPort
+        return self.cmd( 'dpctl ' + ' '.join( args ) +
+                         ' ' + listenAddr )
+
+    def connected( self ):
+        "Is the switch connected to a controller?"
+        status = self.dpctl( 'status' )
+        return ( 'remote.is-connected=true' in status and
+                 'local.is-connected=true' in status )
+
+    @staticmethod
+    def TCReapply( intf ):
+        """Unfortunately user switch and Mininet are fighting
+           over tc queuing disciplines. To resolve the conflict,
+           we re-create the user switch's configuration, but as a
+           leaf of the TCIntf-created configuration."""
+        if isinstance( intf, TCIntf ):
+            ifspeed = 10000000000  # 10 Gbps
+            minspeed = ifspeed * 0.001
+
+            res = intf.config( **intf.params )
+
+            if res is None:  # link may not have TC parameters
+                return
+
+            # Re-add qdisc, root, and default classes user switch created, but
+            # with new parent, as setup by Mininet's TCIntf
+            parent = res['parent']
+            intf.tc( "%s qdisc add dev %s " + parent +
+                     " handle 1: htb default 0xfffe" )
+            intf.tc( "%s class add dev %s classid 1:0xffff parent 1: htb rate "
+                     + str(ifspeed) )
+            intf.tc( "%s class add dev %s classid 1:0xfffe parent 1:0xffff " +
+                     "htb rate " + str(minspeed) + " ceil " + str(ifspeed) )
+
+    def start( self, controllers ):
+        """Start OpenFlow reference user datapath.
+           Log to /tmp/sN-{ofd,ofp}.log.
+           controllers: list of controller objects"""
+        # Add controllers
+        clist = ','.join( [ 'tcp:%s:%d' % ( c.IP(), c.port )
+                            for c in controllers ] )
+        ofdlog = '/tmp/' + self.name + '-ofd.log'
+        ofplog = '/tmp/' + self.name + '-ofp.log'
+        intfs = [ str( i ) for i in self.intfList() if not i.IP() ]
+        self.cmd( 'ofdatapath -i ' + ','.join( intfs ) +
+                  ' punix:/tmp/' + self.name + ' -d %s ' % self.dpid +
+                  self.dpopts +
+                  ' 1> ' + ofdlog + ' 2> ' + ofdlog + ' &' )
+        self.cmd( 'ofprotocol unix:/tmp/' + self.name +
+                  ' ' + clist +
+                  ' --fail=closed ' + self.opts +
+                  ' 1> ' + ofplog + ' 2>' + ofplog + ' &' )
+        if "no-slicing" not in self.dpopts:
+            # Only TCReapply if slicing is enable
+            sleep(1)  # Allow ofdatapath to start before re-arranging qdisc's
+            for intf in self.intfList():
+                if not intf.IP():
+                    self.TCReapply( intf )
+
+    def stop( self, deleteIntfs=True ):
+        """Stop OpenFlow reference user datapath.
+           deleteIntfs: delete interfaces? (True)"""
+        self.cmd( 'kill %ofdatapath' )
+        self.cmd( 'kill %ofprotocol' )
+        super( UserSwitch, self ).stop( deleteIntfs )
+
+
+class OVSSwitch( Switch ):
+    "Open vSwitch switch. Depends on ovs-vsctl."
+
+    def __init__( self, name, failMode='secure', datapath='kernel',
+                  inband=False, protocols=None,
+                  reconnectms=1000, stp=False, batch=False, **params ):
+        """name: name for switch
+           failMode: controller loss behavior (secure|standalone)
+           datapath: userspace or kernel mode (kernel|user)
+           inband: use in-band control (False)
+           protocols: use specific OpenFlow version(s) (e.g. OpenFlow13)
+                      Unspecified (or old OVS version) uses OVS default
+           reconnectms: max reconnect timeout in ms (0/None for default)
+           stp: enable STP (False, requires failMode=standalone)
+           batch: enable batch startup (False)"""
+        Switch.__init__( self, name, **params )
+        self.failMode = failMode
+        self.datapath = datapath
+        self.inband = inband
+        self.protocols = protocols
+        self.reconnectms = reconnectms
+        self.stp = stp
+        self._uuids = []  # controller UUIDs
+        self.batch = batch
+        self.commands = []  # saved commands for batch startup
+
+        # add a prefix to the name of the deployed switch, to find it back easier later
+        prefix = params.get('prefix', '')
+        self.deployed_name = prefix + name
+
+    @classmethod
+    def setup( cls ):
+        "Make sure Open vSwitch is installed and working"
+        pathCheck( 'ovs-vsctl',
+                   moduleName='Open vSwitch (openvswitch.org)')
+        # This should no longer be needed, and it breaks
+        # with OVS 1.7 which has renamed the kernel module:
+        #  moduleDeps( subtract=OF_KMOD, add=OVS_KMOD )
+        out, err, exitcode = errRun( 'ovs-vsctl -t 1 show' )
+        if exitcode:
+            error( out + err +
+                   'ovs-vsctl exited with code %d\n' % exitcode +
+                   '*** Error connecting to ovs-db with ovs-vsctl\n'
+                   'Make sure that Open vSwitch is installed, '
+                   'that ovsdb-server is running, and that\n'
+                   '"ovs-vsctl show" works correctly.\n'
+                   'You may wish to try '
+                   '"service openvswitch-switch start".\n' )
+            exit( 1 )
+        version = quietRun( 'ovs-vsctl --version' )
+        cls.OVSVersion = findall( r'\d+\.\d+', version )[ 0 ]
+
+    @classmethod
+    def isOldOVS( cls ):
+        "Is OVS ersion < 1.10?"
+        return ( StrictVersion( cls.OVSVersion ) <
+                 StrictVersion( '1.10' ) )
+
+    def dpctl( self, *args ):
+        "Run ovs-ofctl command"
+        return self.cmd( 'ovs-ofctl', args[ 0 ], self.deployed_name, *args[ 1: ] )
+
+    def vsctl( self, *args, **kwargs ):
+        "Run ovs-vsctl command (or queue for later execution)"
+        if self.batch:
+            cmd = ' '.join( str( arg ).strip() for arg in args )
+            self.commands.append( cmd )
+        else:
+            return self.cmd( 'ovs-vsctl', *args, **kwargs )
+
+    @staticmethod
+    def TCReapply( intf ):
+        """Unfortunately OVS and Mininet are fighting
+           over tc queuing disciplines. As a quick hack/
+           workaround, we clear OVS's and reapply our own."""
+        if isinstance( intf, TCIntf ):
+            intf.config( **intf.params )
+
+    def attach( self, intf ):
+        "Connect a data port"
+        self.vsctl( 'add-port', self.deployed_name, intf )
+        self.cmd( 'ifconfig', intf, 'up' )
+        self.TCReapply( intf )
+
+    def attachInternalIntf(self, intf_name, net):
+        """Add an interface of type:internal to the ovs switch
+           and add routing entry to host"""
+        self.vsctl('add-port', self.deployed_name, intf_name, '--', 'set', ' interface', intf_name, 'type=internal')
+        int_intf = Intf(intf_name, node=self.deployed_name)
+        #self.addIntf(int_intf, moveIntfFn=None)
+        self.cmd('ip route add', net, 'dev', intf_name)
+
+        return self.nameToIntf[intf_name]
+
+    def detach( self, intf ):
+        "Disconnect a data port"
+        self.vsctl( 'del-port', self.deployed_name, intf )
+
+    def controllerUUIDs( self, update=False ):
+        """Return ovsdb UUIDs for our controllers
+           update: update cached value"""
+        if not self._uuids or update:
+            controllers = self.cmd( 'ovs-vsctl -- get Bridge', self.deployed_name,
+                                    'Controller' ).strip()
+            if controllers.startswith( '[' ) and controllers.endswith( ']' ):
+                controllers = controllers[ 1 : -1 ]
+                if controllers:
+                    self._uuids = [ c.strip()
+                                    for c in controllers.split( ',' ) ]
+        return self._uuids
+
+    def connected( self ):
+        "Are we connected to at least one of our controllers?"
+        for uuid in self.controllerUUIDs():
+            if 'true' in self.vsctl( '-- get Controller',
+                                     uuid, 'is_connected' ):
+                return True
+        return self.failMode == 'standalone'
+
+    def intfOpts( self, intf ):
+        "Return OVS interface options for intf"
+        opts = ''
+        if not self.isOldOVS():
+            # ofport_request is not supported on old OVS
+            opts += ' ofport_request=%s' % self.ports[ intf ]
+            # Patch ports don't work well with old OVS
+            if isinstance( intf, OVSIntf ):
+                intf1, intf2 = intf.link.intf1, intf.link.intf2
+                peer = intf1 if intf1 != intf else intf2
+                opts += ' type=patch options:peer=%s' % peer
+        return '' if not opts else ' -- set Interface %s' % intf + opts
+
+    def bridgeOpts( self ):
+        "Return OVS bridge options"
+        opts = ( ' other_config:datapath-id=%s' % self.dpid +
+                 ' fail_mode=%s' % self.failMode )
+        if not self.inband:
+            opts += ' other-config:disable-in-band=true'
+        if self.datapath == 'user':
+            opts += ' datapath_type=netdev'
+        if self.protocols and not self.isOldOVS():
+            opts += ' protocols=%s' % self.protocols
+        if self.stp and self.failMode == 'standalone':
+            opts += ' stp_enable=true'
+        opts += ' other-config:dp-desc=%s' % self.name
+        return opts
+
+    def start( self, controllers ):
+        "Start up a new OVS OpenFlow switch using ovs-vsctl"
+        if self.inNamespace:
+            raise Exception(
+                'OVS kernel switch does not work in a namespace' )
+        int( self.dpid, 16 )  # DPID must be a hex string
+        # Command to add interfaces
+        intfs = ''.join( ' -- add-port %s %s' % ( self.deployed_name, intf ) +
+                         self.intfOpts( intf )
+                         for intf in self.intfList()
+                         if self.ports[ intf ] and not intf.IP() )
+        # Command to create controller entries
+        clist = [ ( self.deployed_name + c.name, '%s:%s:%d' %
+                  ( c.protocol, c.IP(), c.port ) )
+                  for c in controllers ]
+        if self.listenPort:
+            clist.append( ( self.deployed_name + '-listen',
+                            'ptcp:%s' % self.listenPort ) )
+        ccmd = '-- --id=@%s create Controller target=\\"%s\\"'
+        if self.reconnectms:
+            ccmd += ' max_backoff=%d' % self.reconnectms
+        cargs = ' '.join( ccmd % ( name, target )
+                          for name, target in clist )
+        # Controller ID list
+        cids = ','.join( '@%s' % name for name, _target in clist )
+        # Try to delete any existing bridges with the same name
+        if not self.isOldOVS():
+            cargs += ' -- --if-exists del-br %s' % self.deployed_name
+        # One ovs-vsctl command to rule them all!
+        self.vsctl( cargs +
+                    ' -- add-br %s' % self.deployed_name +
+                    ' -- set bridge %s controller=[%s]' % ( self.deployed_name, cids  ) +
+                    self.bridgeOpts() +
+                    intfs )
+        # If necessary, restore TC config overwritten by OVS
+        if not self.batch:
+            for intf in self.intfList():
+                self.TCReapply( intf )
+
+    # This should be ~ int( quietRun( 'getconf ARG_MAX' ) ),
+    # but the real limit seems to be much lower
+    argmax = 128000
+
+    @classmethod
+    def batchStartup( cls, switches, run=errRun ):
+        """Batch startup for OVS
+           switches: switches to start up
+           run: function to run commands (errRun)"""
+        info( '...' )
+        cmds = 'ovs-vsctl'
+        for switch in switches:
+            if switch.isOldOVS():
+                # Ideally we'd optimize this also
+                run( 'ovs-vsctl del-br %s' % switch )
+            for cmd in switch.commands:
+                cmd = cmd.strip()
+                # Don't exceed ARG_MAX
+                if len( cmds ) + len( cmd ) >= cls.argmax:
+                    run( cmds, shell=True )
+                    cmds = 'ovs-vsctl'
+                cmds += ' ' + cmd
+                switch.cmds = []
+                switch.batch = False
+        if cmds:
+            run( cmds, shell=True )
+        # Reapply link config if necessary...
+        for switch in switches:
+            for intf in switch.intfs.values():
+                if isinstance( intf, TCIntf ):
+                    intf.config( **intf.params )
+        return switches
+
+    def stop( self, deleteIntfs=True ):
+        """Terminate OVS switch.
+           deleteIntfs: delete interfaces? (True)"""
+        self.cmd( 'ovs-vsctl del-br', self.deployed_name )
+        if self.datapath == 'user':
+            self.cmd( 'ip link del', self.deployed_name )
+        super( OVSSwitch, self ).stop( deleteIntfs )
+
+    @classmethod
+    def batchShutdown( cls, switches, run=errRun ):
+        "Shut down a list of OVS switches"
+        delcmd = 'del-br %s'
+        if switches and not switches[ 0 ].isOldOVS():
+            delcmd = '--if-exists ' + delcmd
+        # First, delete them all from ovsdb
+        run( 'ovs-vsctl ' +
+             ' -- '.join( delcmd % s.deployed_name for s in switches ), shell=True )
+        # Next, shut down all of the processes
+        pids = ' '.join( str( switch.pid ) for switch in switches )
+
+        success = False
+        while not success:
+            try:
+                run( 'kill -HUP ' + pids )
+                success = True
+            except select.error as e:
+                # retry on interrupt
+                if e[0] != errno.EINTR:
+                    raise
+        for switch in switches:
+            switch.terminate()
+            switch.shell = None
+        return switches
+
+
+OVSKernelSwitch = OVSSwitch

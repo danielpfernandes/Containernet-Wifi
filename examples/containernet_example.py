@@ -2,15 +2,16 @@
 """
 This is the most simple example to showcase Containernet.
 """
-from mininet.node import Controller
-from mininet.log import info, setLogLevel
 from containernet.cli import CLI
 from containernet.link import TCLink
 from containernet.net import Containernet
+from mininet.node import Controller
+from mininet.log import info, setLogLevel
 
 setLogLevel('info')
 
 net = Containernet(controller=Controller)
+
 info('*** Adding controller\n')
 net.addController('c0')
 info('*** Adding docker containers\n')
