@@ -596,7 +596,8 @@ class DockerSta ( Station ):
         self.dcmd = dcmd if dcmd is not None else "/bin/bash"
         self.dc = None  # pointer to the dict containing 'Id' and 'Warnings' keys of the container
         self.dcinfo = None
-        self.func = []
+        self.wintfs = {}
+        self.wports = {}
         self.did = None # Id of running container
         #  let's store our resource limits to have them available through the
         #  Mininet API later on

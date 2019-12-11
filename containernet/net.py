@@ -118,12 +118,15 @@ from mn_wifi.net import Mininet_wifi
 from mn_wifi.node import AP, Station, Car, \
     OVSKernelAP
 from mn_wifi.wmediumdConnector import snr, interference
-from mn_wifi.link import wmediumd, _4address, TCWirelessLink, ITSLink, \
-    wifiDirectLink, adhoc, mesh, physicalMesh, physicalWifiDirectLink
+from mn_wifi.link import wirelessLink, wmediumd, Association, \
+    _4address, TCWirelessLink, TCLinkWirelessStation, ITSLink, \
+    wifiDirectLink, adhoc, mesh, master, managed, physicalMesh, \
+    physicalWifiDirectLink, _4addrClient, _4addrAP
 from mn_wifi.energy import Energy
 from mn_wifi.mobility import mobility as mob
 from mn_wifi.plot import plot2d
-from mn_wifi.sixLoWPAN.link import sixLoWPANLink
+from mn_wifi.sixLoWPAN.link import sixLoWPAN
+from mn_wifi.util import ipAdd6, netParse6
 
 
 # Mininet version: should be consistent with README and LICENSE
@@ -134,6 +137,7 @@ CONTAINERNET_VERSION = "3.0"
 # so it can be removed at a later time
 SAP_PREFIX = 'sap.'
 
+
 class Containernet( Mininet_wifi ):
     "Network emulation with hosts spawned in network namespaces."
 
@@ -141,10 +145,10 @@ class Containernet( Mininet_wifi ):
                  accessPoint=OVSKernelAP, host=Host, station=Station,
                  car=Car, controller=DefaultController,
                  link=TCWirelessLink, intf=Intf, build=True, xterms=False,
-                 cleanup=False, ipBase='10.0.0.0/8', inNamespace=False,
-                 autoSetMacs=False, autoStaticArp=False, autoPinCpus=False,
-                 listenPort=None, waitConnected=False, ssid="new-ssid",
-                 mode="g", channel=1, wmediumd_mode=snr, roads=0,
+                 cleanup=False, ipBase='10.0.0.0/8', ip6Base='2001:0:0:0:0:0:0:0/64',
+                 inNamespace=False, autoSetMacs=False, autoStaticArp=False,
+                 autoPinCpus=False, listenPort=None, waitConnected=False,
+                 ssid="new-ssid", mode="g", channel=1, wmediumd_mode=snr, roads=0,
                  fading_coefficient=0, autoAssociation=True,
                  allAutoAssociation=True, driver='nl80211',
                  autoSetPositions=False, configureWiFiDirect=False,
@@ -179,10 +183,13 @@ class Containernet( Mininet_wifi ):
         self.link = link
         self.intf = intf
         self.ipBase = ipBase
-        self.ipBaseNum, self.prefixLen = netParse( self.ipBase )
+        self.ip6Base = ip6Base
+        self.ipBaseNum, self.prefixLen = netParse(self.ipBase)
+        self.ip6BaseNum, self.prefixLen6 = netParse6(self.ip6Base)
         hostIP = ( 0xffffffff >> self.prefixLen ) & self.ipBaseNum
         # Start for address allocation
         self.nextIP = hostIP if hostIP > 0 else 1
+        self.nextIP6 = 1
         self.inNamespace = inNamespace
         self.xterms = xterms
         self.cleanup = cleanup
@@ -464,7 +471,7 @@ class Containernet( Mininet_wifi ):
                  wifiDirectLink, physicalWifiDirectLink]
         if cls in modes:
             cls(node=node1, **params)
-        elif cls == sixLoWPANLink:
+        elif cls == sixLoWPAN:
             link = cls(node=node1, port=port1, **params)
             self.links.append(link)
             return link
@@ -677,14 +684,13 @@ class Containernet( Mininet_wifi ):
         if self.autoStaticArp:
             self.staticArp()
 
-        func = ['adhoc', 'mesh', 'wifiDirect']
         for node in self.stations:
-            for wlan in range(0, len(node.params['wlan'])):
-                if not isinstance(node, AP) and node.func[0] != 'ap' \
-                        and node.func[wlan] not in func:
+            for wlan, intf in enumerate(node.wintfs.values()):
+                if not isinstance(intf, master) and not isinstance(intf, adhoc) \
+                        and not isinstance(intf, mesh) \
+                        and not isinstance(intf, wifiDirectLink):
                     if isinstance(node, Station) and not hasattr(node, 'range'):
-                        node.params['range'][wlan] = \
-                            int(node.params['range'][wlan]) / 5
+                        intf.range = int(intf.range)
 
         if self.allAutoAssociation:
             if self.autoAssociation and not self.configureWiFiDirect:

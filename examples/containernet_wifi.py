@@ -18,7 +18,6 @@ def topology():
                           cls=DockerSta, dimage="ubuntu:trusty", cpu_shares=20)
     sta2 = net.addStation('sta2', ip='10.0.0.4', mac='00:02:00:00:00:11',
                           cls=DockerSta, dimage="ubuntu:trusty", cpu_shares=20)
-
     ap1 = net.addAccessPoint('ap1')
     c0 = net.addController('c0')
 
@@ -40,6 +39,7 @@ def topology():
 
     info('*** Stopping network\n')
     net.stop()
+
 
 if __name__ == '__main__':
     setLogLevel('info')
