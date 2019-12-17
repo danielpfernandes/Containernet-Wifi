@@ -211,6 +211,7 @@ class Containernet( Mininet_wifi ):
         self.sixLP = []
         self.controllers = []
         self.stations = []
+        self.wmediumdMac = []
         self.accessPoint = OVSKernelAP
         self.autoAssociation = autoAssociation  # does not include mobility
         self.allAutoAssociation = allAutoAssociation  # includes mobility
@@ -220,7 +221,7 @@ class Containernet( Mininet_wifi ):
         self.ssid = 'new-ssid'
         self.configure4addr = False
         self.configureWiFiDirect = False
-        self.wmediumd_mode = ''
+        self.wmediumd_mode = wmediumd_mode
         self.isVanet = False
         self.bridge = False
         self.ifb = False
