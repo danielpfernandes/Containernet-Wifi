@@ -86,10 +86,8 @@ method may be called to shut down the network.
 
 """
 
-import os
 import re
 import select
-import signal
 import random
 import shlex
 import ipaddress
@@ -110,22 +108,17 @@ from mininet.util import ( quietRun, fixLimits, numCores, ensureRoot,
                                 waitListening, BaseString )
 from containernet.cli import CLI
 from containernet.node import Docker, OVSKernelSwitch, Host, OVSSwitch
-from containernet.term import cleanUpScreens, makeTerms
 from containernet.link import TCLink, Intf
 
 from mn_wifi.net import Mininet_wifi
-from mn_wifi.node import AP, Station, Car, \
-    OVSKernelAP
+from mn_wifi.node import AP, Station, Car, OVSKernelAP
 from mn_wifi.wmediumdConnector import snr, interference
-from mn_wifi.link import wirelessLink, wmediumd, Association, \
-    _4address, TCWirelessLink, TCLinkWirelessStation, ITSLink, \
-    wifiDirectLink, adhoc, mesh, master, managed, physicalMesh, \
-    physicalWifiDirectLink, _4addrClient, _4addrAP
-from mn_wifi.energy import Energy
+from mn_wifi.link import wmediumd, _4address, TCWirelessLink, ITSLink,\
+    wifiDirectLink, adhoc, mesh, physicalMesh, physicalWifiDirectLink
 from mn_wifi.mobility import mobility as mob
 from mn_wifi.plot import plot2d
 from mn_wifi.sixLoWPAN.link import sixLoWPAN
-from mn_wifi.util import ipAdd6, netParse6
+from mn_wifi.util import netParse6
 
 
 # Mininet version: should be consistent with README and LICENSE
@@ -149,9 +142,8 @@ class Containernet( Mininet_wifi ):
                  autoPinCpus=False, listenPort=None, waitConnected=False,
                  ssid="new-ssid", mode="g", channel=1, wmediumd_mode=snr, roads=0,
                  fading_coefficient=0, autoAssociation=True,
-                 allAutoAssociation=True, driver='nl80211',
-                 autoSetPositions=False, configureWiFiDirect=False,
-                 configure4addr=False, noise_threshold=-91, cca_threshold=-90,
+                 allAutoAssociation=True, autoSetPositions=False, configWiFiDirect=False,
+                 config4addr=False, noise_th=-91, cca_th=-90,
                  disable_tcp_checksum=False, ifb=False,
                  bridge=False, plot=False, plot3d=False, docker=False,
                  container='mininet-wifi', ssh_user='alpha',
@@ -211,16 +203,18 @@ class Containernet( Mininet_wifi ):
         self.sixLP = []
         self.controllers = []
         self.stations = []
+        self.apsensors = []
+        self.sensors = []
         self.wmediumdMac = []
         self.accessPoint = OVSKernelAP
         self.autoAssociation = autoAssociation  # does not include mobility
         self.allAutoAssociation = allAutoAssociation  # includes mobility
         self.noise_threshold = -91
-        self.cca_threshold = -90
+        self.cca_th = -90
         self.driver = 'nl80211'
         self.ssid = 'new-ssid'
-        self.configure4addr = False
-        self.configureWiFiDirect = False
+        self.config4addr = False
+        self.configWiFiDirect = False
         self.wmediumd_mode = wmediumd_mode
         self.isVanet = False
         self.bridge = False
@@ -247,11 +241,11 @@ class Containernet( Mininet_wifi ):
         self.bridge = bridge
         self.init_plot = plot
         self.init_plot3d = plot3d
-        self.cca_threshold = cca_threshold
-        self.configureWiFiDirect = configureWiFiDirect
-        self.configure4addr = configure4addr
+        self.cca_th = cca_th
+        self.configWiFiDirect = configWiFiDirect
+        self.config4addr = config4addr
         self.fading_coefficient = fading_coefficient
-        self.noise_threshold = noise_threshold
+        self.noise_th = noise_th
         self.mob_param = dict()
         self.disable_tcp_checksum = disable_tcp_checksum
         self.plot = plot2d
@@ -594,25 +588,6 @@ class Containernet( Mininet_wifi ):
             self.delLink( link )
         return links
 
-    def configHosts( self ):
-        "Configure a set of hosts."
-        nodes = self.hosts + self.stations
-        for host in nodes:
-            info( host.name + ' ' )
-            intf = host.defaultIntf()
-            if intf:
-                host.configDefault()
-            else:
-                # Don't configure nonexistent intf
-                host.configDefault( ip=None, mac=None )
-            # You're low priority, dude!
-            # BL: do we want to do this here or not?
-            # May not make sense if we have CPU lmiting...
-            # quietRun( 'renice +18 -p ' + repr( host.pid ) )
-            # This may not be the right place to do this, but
-            # it needs to be done somewhere.
-        info( '\n' )
-
     def buildFromTopo( self, topo=None ):
         """Build mininet from a topology object
            At the end of this function, everything should be connected
@@ -665,112 +640,6 @@ class Containernet( Mininet_wifi ):
         "Control net config hook: override in subclass"
         raise Exception( 'configureControlNetwork: '
                          'should be overriden in subclass', self )
-
-    def build(self):
-        "Build mininet-wifi."
-        if self.topo:
-            self.buildFromWirelessTopo(self.topo)
-            if self.init_plot or self.init_plot3d:
-                max_z = 0
-                if self.init_plot3d:
-                    max_z = len(self.stations) * 100
-                self.plotGraph(max_x=(len(self.stations) * 100),
-                               max_y=(len(self.stations) * 100),
-                               max_z=max_z)
-        else:
-            if not mob.stations:
-                for node in self.stations:
-                    if 'position' in node.params:
-                        mob.stations.append(node)
-
-        if not self.wmediumd_started:
-            self.init_wmediumd()
-
-        if self.inNamespace:
-            self.configureControlNetwork()
-
-        info('*** Configuring nodes\n')
-        self.configHosts()
-        if self.xterms:
-            self.startTerms()
-        if self.autoStaticArp:
-            self.staticArp()
-
-        for node in self.stations:
-            for wlan, intf in enumerate(node.wintfs.values()):
-                if not isinstance(intf, master) and not isinstance(intf, adhoc) \
-                        and not isinstance(intf, mesh) \
-                        and not isinstance(intf, wifiDirectLink):
-                    if isinstance(node, Station) and not hasattr(node, 'range'):
-                        intf.range = int(intf.range)
-
-        if self.allAutoAssociation:
-            if self.autoAssociation and not self.configureWiFiDirect:
-                self.auto_association()
-
-        if not self.mob_check:
-            self.check_if_mob()
-
-        nodes = self.stations + self.aps + self.cars
-        battery_nodes = []
-        for node in nodes:
-            if 'battery' in node.params:
-                battery_nodes.append(node)
-        if battery_nodes:
-            Energy(battery_nodes)
-
-        self.built = True
-
-    def startTerms( self ):
-        "Start a terminal for each node."
-        if 'DISPLAY' not in os.environ:
-            error( "Error starting terms: Cannot connect to display\n" )
-            return
-        info( "*** Running terms on %s\n" % os.environ[ 'DISPLAY' ] )
-        cleanUpScreens()
-        self.terms += makeTerms( self.controllers, 'controller' )
-        self.terms += makeTerms( self.switches, 'switch' )
-        self.terms += makeTerms( self.hosts, 'host' )
-        self.terms += makeTerms(self.stations, 'station')
-        self.terms += makeTerms(self.aps, 'ap')
-
-    def stopXterms( self ):
-        "Kill each xterm."
-        for term in self.terms:
-            os.kill( term.pid, signal.SIGKILL )
-        cleanUpScreens()
-
-    def staticArp( self ):
-        "Add all-pairs ARP entries to remove the need to handle broadcast."
-        for src in self.hosts:
-            for dst in self.hosts:
-                if src != dst:
-                    src.setARP( ip=dst.IP(), mac=dst.MAC() )
-
-    def start( self ):
-        "Start controller and switches."
-        if not self.built:
-            self.build()
-        info( '*** Starting controller\n' )
-        for controller in self.controllers:
-            info( controller.name + ' ')
-            controller.start()
-        info( '\n' )
-        info( '*** Starting %s switches\n' % len( self.switches ) )
-        for switch in self.switches:
-            info( switch.name + ' ')
-            switch.start( self.controllers )
-        started = {}
-        for swclass, switches in groupby(
-                sorted( self.switches,
-                        key=lambda s: str( type( s ) ) ), type ):
-            switches = tuple( switches )
-            if hasattr( swclass, 'batchStartup' ):
-                success = swclass.batchStartup( switches )
-                started.update( { s: s for s in success } )
-        info( '\n' )
-        if self.waitConn:
-            self.waitConnected()
 
     def stop( self ):
         Mininet_wifi.stopGraphParams()
