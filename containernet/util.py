@@ -18,6 +18,8 @@ import codecs
 Python3 = sys.version_info[0] == 3
 BaseString = str if Python3 else getattr( str, '__base__' )
 Encoding = 'utf-8' if Python3 else None
+
+
 class NullCodec( object ):
     "Null codec for Python 2"
     @staticmethod
@@ -76,6 +78,7 @@ def run( cmd ):
        cmd: list of command params"""
     return call( cmd.split( ' ' ) )
 
+
 def checkRun( cmd ):
     """Simple interface to subprocess.check_call()
        cmd: list of command params"""
@@ -83,6 +86,7 @@ def checkRun( cmd ):
 
 # pylint doesn't understand explicit type checking
 # pylint: disable=maybe-no-member
+
 
 def oldQuietRun( *cmd ):
     """Run a command, routing stderr to stdout, and return the output.
@@ -112,6 +116,7 @@ def oldQuietRun( *cmd ):
 
 # This is a bit complicated, but it enables us to
 # monitor command output as it is happening
+
 
 # pylint: disable=too-many-branches,too-many-statements
 def errRun( *cmd, **kwargs ):
@@ -182,6 +187,7 @@ def errRun( *cmd, **kwargs ):
     return out, err, returncode
 # pylint: enable=too-many-branches
 
+
 def errFail( *cmd, **kwargs ):
     "Run a command using errRun and raise exception on nonzero exit"
     out, err, ret = errRun( *cmd, **kwargs )
@@ -190,9 +196,11 @@ def errFail( *cmd, **kwargs ):
                          % ( cmd, ret, err ) )
     return out, err, ret
 
+
 def quietRun( cmd, **kwargs ):
     "Run a command and return merged stdout and stderr"
     return errRun( cmd, stderr=STDOUT, **kwargs )[ 0 ]
+
 
 def which(cmd, **kwargs ):
     "Run a command and return merged stdout and stderr"
@@ -200,6 +208,7 @@ def which(cmd, **kwargs ):
     return out.rstrip() if ret == 0 else None
 
 # pylint: enable=maybe-no-member
+
 
 def isShellBuiltin( cmd ):
     "Return True if cmd is a bash builtin."
@@ -224,6 +233,7 @@ isShellBuiltin.builtIns = None
 # For the kernel datapath, switch interfaces
 # live in the root namespace and thus do not have to be
 # explicitly moved.
+
 
 def makeIntfPair( intf1, intf2, addr1=None, addr2=None, node1=None, node2=None,
                   deleteIntfs=True, runCmd=None ):

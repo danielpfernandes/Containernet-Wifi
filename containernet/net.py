@@ -115,8 +115,7 @@ from mn_wifi.node import AP, Station, Car, OVSKernelAP
 from mn_wifi.wmediumdConnector import snr, interference
 from mn_wifi.link import wmediumd, _4address, TCWirelessLink, ITSLink,\
     wifiDirectLink, adhoc, mesh, physicalMesh, physicalWifiDirectLink
-from mn_wifi.mobility import mobility as mob
-from mn_wifi.plot import plot2d
+from mn_wifi.mobility import Mobility as mob
 from mn_wifi.sixLoWPAN.link import sixLoWPAN
 from mn_wifi.util import netParse6
 
@@ -141,7 +140,7 @@ class Containernet( Mininet_wifi ):
                  inNamespace=False, autoSetMacs=False, autoStaticArp=False,
                  autoPinCpus=False, listenPort=None, waitConnected=False,
                  ssid="new-ssid", mode="g", channel=1, wmediumd_mode=snr, roads=0,
-                 fading_coefficient=0, autoAssociation=True,
+                 fading_cof=0, autoAssociation=True,
                  allAutoAssociation=True, autoSetPositions=False, configWiFiDirect=False,
                  config4addr=False, noise_th=-91, cca_th=-90,
                  disable_tcp_checksum=False, ifb=False,
@@ -244,11 +243,10 @@ class Containernet( Mininet_wifi ):
         self.cca_th = cca_th
         self.configWiFiDirect = configWiFiDirect
         self.config4addr = config4addr
-        self.fading_coefficient = fading_coefficient
+        self.fading_cof = fading_cof
         self.noise_th = noise_th
         self.mob_param = dict()
         self.disable_tcp_checksum = disable_tcp_checksum
-        self.plot = plot2d
         self.roads = roads
         self.seed = 1
         self.n_radios = 0
