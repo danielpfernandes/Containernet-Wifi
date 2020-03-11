@@ -544,7 +544,6 @@ class OVSLink( Link ):
     def __init__( self, node1, node2, **kwargs ):
         "See Link.__init__() for options"
         from containernet.node import OVSSwitch
-        print "kkkkkkkkkkkkkk"
         self.isPatchLink = False
         if ( isinstance( node1, OVSSwitch ) and
              isinstance( node2, OVSSwitch ) ):
