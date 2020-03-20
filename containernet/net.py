@@ -132,21 +132,7 @@ SAP_PREFIX = 'sap.'
 class Containernet( Mininet_wifi ):
     "Network emulation with hosts spawned in network namespaces."
 
-    def __init__( self, topo=None, switch=OVSKernelSwitch,
-                 accessPoint=OVSKernelAP, host=Host, station=Station,
-                 car=Car, controller=DefaultController,
-                 link=TCWirelessLink, intf=Intf, build=True, xterms=False,
-                 cleanup=False, ipBase='10.0.0.0/8', ip6Base='2001:0:0:0:0:0:0:0/64',
-                 inNamespace=False, autoSetMacs=False, autoStaticArp=False,
-                 autoPinCpus=False, listenPort=None, waitConnected=False,
-                 ssid="new-ssid", mode="g", channel=1, wmediumd_mode=snr, roads=0,
-                 fading_cof=0, autoAssociation=True,
-                 allAutoAssociation=True, autoSetPositions=False, configWiFiDirect=False,
-                 config4addr=False, noise_th=-91, cca_th=-90,
-                 disable_tcp_checksum=False, ifb=False,
-                 bridge=False, plot=False, plot3d=False, docker=False,
-                 container='mininet-wifi', ssh_user='alpha',
-                 set_socket_ip=None, set_socket_port=12345 ):
+    def __init__( self ):
         """Create Mininet object.
            topo: Topo (topology) object or None
            switch: default Switch class
@@ -164,116 +150,22 @@ class Containernet( Mininet_wifi ):
            autoPinCpus: pin hosts to (real) cores (requires CPULimitedHost)?
            listenPort: base listening port to open; will be incremented for
                each additional switch in the net if inNamespace=False"""
-        self.topo = topo
-        self.switch = switch
-        self.host = host
-        self.station = station
-        self.accessPoint = accessPoint
-        self.controller = controller
-        self.link = link
-        self.intf = intf
-        self.ipBase = ipBase
-        self.ip6Base = ip6Base
-        self.ipBaseNum, self.prefixLen = netParse(self.ipBase)
-        self.ip6BaseNum, self.prefixLen6 = netParse6(self.ip6Base)
-        hostIP = ( 0xffffffff >> self.prefixLen ) & self.ipBaseNum
-        # Start for address allocation
-        self.nextIP = hostIP if hostIP > 0 else 1
-        self.nextIP6 = 1
-        self.inNamespace = inNamespace
-        self.xterms = xterms
-        self.cleanup = cleanup
-        self.autoSetMacs = autoSetMacs
-        self.autoStaticArp = autoStaticArp
-        self.autoPinCpus = autoPinCpus
-        self.numCores = numCores()
-        self.nextCore = 0  # next core for pinning hosts to CPUs
-        self.listenPort = listenPort
-        self.waitConn = waitConnected
-        self.channel = 1
-        self.mode = 'g'
-        self.autoSetPositions = ''
-        self.nextPos_sta = 1
-        self.n_radios = 0
-        self.hosts = []
-        self.switches = []
-        self.aps = []
-        self.cars = []
-        self.sixLP = []
-        self.controllers = []
-        self.stations = []
-        self.apsensors = []
-        self.sensors = []
-        self.wmediumdMac = []
-        self.accessPoint = OVSKernelAP
-        self.autoAssociation = autoAssociation  # does not include mobility
-        self.allAutoAssociation = allAutoAssociation  # includes mobility
-        self.noise_threshold = -91
-        self.cca_th = -90
-        self.driver = 'nl80211'
-        self.ssid = 'new-ssid'
-        self.config4addr = False
-        self.configWiFiDirect = False
-        self.wmediumd_mode = wmediumd_mode
-        self.isVanet = False
-        self.bridge = False
-        self.ifb = False
-        self.alt_module = False
-        self.ppm_is_set = False
-        self.docker = False
-        self.draw = False
-        self.isReplaying = False
-        self.wmediumd_started = False
-        self.mob_check = False
-        self.isVanet = False
-        self.links = []
-        self.mob_param = {}
-        self.nameToNode = {}  # name to Node (Host/Switch) objects
-        self.terms = []  # list of spawned xterm processes
+        super(Containernet, self).__init__()
         self.SAPswitches = {}
-        self.set_socket_ip = set_socket_ip
-        self.set_socket_port = set_socket_port
-        self.docker = docker
-        self.container = container
-        self.ssh_user = ssh_user
-        self.ifb = ifb  # Support to Intermediate Functional Block (IFB) Devices
-        self.bridge = bridge
-        self.init_plot = plot
-        self.init_plot3d = plot3d
-        self.cca_th = cca_th
-        self.configWiFiDirect = configWiFiDirect
-        self.config4addr = config4addr
-        self.fading_cof = fading_cof
-        self.noise_th = noise_th
-        self.mob_param = dict()
-        self.disable_tcp_checksum = disable_tcp_checksum
-        self.roads = roads
-        self.seed = 1
-        self.n_radios = 0
-        self.min_v = 1
-        self.max_v = 10
-        self.min_x = 0
-        self.min_y = 0
-        self.min_z = 0
-        self.max_x = 100
-        self.max_y = 100
-        self.max_z = 0
-        self.conn = {}
-        self.wlinks = []
         # Mininet_wifi.init()  # Initialize Mininet if necessary
 
         if self.set_socket_ip:
             self.server()
 
-        if autoSetPositions and link == wmediumd:
+        if self.autoSetPositions and self.link == wmediumd:
             self.wmediumd_mode = interference
 
-        if not allAutoAssociation:
+        if not self.allAutoAssociation:
             self.autoAssociation = False
             mob.allAutoAssociation = False
 
         self.built = False
-        if topo and build:
+        if self.topo and self.build:
             self.build()
 
     def waitConnected( self, timeout=None, delay=.5 ):
@@ -1066,7 +958,6 @@ class Containernet( Mininet_wifi ):
         """
         return self.removeHost(name, **params)
 
-
     def addExtSAP(self, sapName, sapIP, dpid=None, **params):
         """
         Add an external Service Access Point, implemented as an OVSBridge
@@ -1077,7 +968,7 @@ class Containernet( Mininet_wifi ):
         :return:
         """
         SAPswitch = self.addSwitch(sapName, cls=OVSBridge, prefix=SAP_PREFIX,
-                       dpid=dpid, ip=sapIP, **params)
+                                   dpid=dpid, ip=sapIP, **params)
         self.SAPswitches[sapName] = SAPswitch
 
         NAT = params.get('NAT', False)
