@@ -101,23 +101,22 @@ from six import string_types
 from mininet.net import Mininet
 from mininet.link import TCULink
 from mininet.log import info, error, debug, output, warn
-from mininet.node import ( Node, DefaultController, Controller, OVSBridge )
+from mininet.node import ( Node, Controller, OVSBridge )
 from mininet.nodelib import NAT
-from mininet.util import ( quietRun, fixLimits, numCores, ensureRoot,
-                                macColonHex, ipStr, ipParse, netParse, ipAdd,
+from mininet.util import ( quietRun, fixLimits, ensureRoot,
+                                macColonHex, ipStr, ipParse, ipAdd,
                                 waitListening, BaseString )
 from containernet.cli import CLI
-from containernet.node import Docker, OVSKernelSwitch, Host, OVSSwitch
-from containernet.link import TCLink, Intf
+from containernet.node import Docker, OVSSwitch
+from containernet.link import TCLink
 
 from mn_wifi.net import Mininet_wifi
-from mn_wifi.node import AP, Station, Car, OVSKernelAP
-from mn_wifi.wmediumdConnector import snr, interference
+from mn_wifi.node import AP
+from mn_wifi.wmediumdConnector import interference
 from mn_wifi.link import wmediumd, _4address, TCWirelessLink, ITSLink,\
     wifiDirectLink, adhoc, mesh, physicalMesh, physicalWifiDirectLink
 from mn_wifi.mobility import Mobility as mob
 from mn_wifi.sixLoWPAN.link import sixLoWPAN
-from mn_wifi.util import netParse6
 
 
 # Mininet version: should be consistent with README and LICENSE
@@ -381,8 +380,11 @@ class Containernet( Mininet_wifi ):
                     self.links.append(link)
                     return link
         elif ((node1 in self.stations and node2 in self.aps)
-              or (node2 in self.stations and node1 in self.aps)) and 'link' not in options:
-            self.infraAssociation(node1, node2, port1, port2, cls, **params)
+              or (node2 in self.stations and node1 in self.aps)) and cls != TCLink:
+            if cls == wmediumd:
+                self.infra_wmediumd_link(node1, node2, **params)
+            else:
+                self.infra_tc(node1, node2, port1, port2, cls, **params)
         else:
             if 'link' in options:
                 options.pop('link', None)
@@ -532,7 +534,7 @@ class Containernet( Mininet_wifi ):
                          'should be overriden in subclass', self )
 
     def stop( self ):
-        Mininet_wifi.stopGraphParams()
+        self.stop_graph_params()
         info('*** Removing NAT rules of %i SAPs\n' % len(self.SAPswitches))
         for SAPswitch in self.SAPswitches:
             self.removeSAPNAT(self.SAPswitches[SAPswitch])
@@ -571,7 +573,7 @@ class Containernet( Mininet_wifi ):
         for node in nodes:
             info( node.name + ' ' )
             node.terminate()
-        Mininet_wifi.closeMininetWiFi()
+        self.closeMininetWiFi()
         info( '\n*** Done\n' )
 
     def run( self, test, *args, **kwargs ):
