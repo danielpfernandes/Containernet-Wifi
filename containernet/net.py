@@ -101,18 +101,18 @@ from six import string_types
 from mininet.net import Mininet
 from mininet.link import TCULink
 from mininet.log import info, error, debug, output, warn
-from mininet.node import ( Node, Controller, OVSBridge )
+from mininet.node import ( Node, DefaultController, Controller, OVSBridge )
 from mininet.nodelib import NAT
 from mininet.util import ( quietRun, fixLimits, ensureRoot,
                                 macColonHex, ipStr, ipParse, ipAdd,
                                 waitListening, BaseString )
 from containernet.cli import CLI
-from containernet.node import Docker, OVSSwitch
-from containernet.link import TCLink
+from containernet.node import Docker, OVSKernelSwitch, Host, OVSSwitch
+from containernet.link import TCLink, Intf
 
 from mn_wifi.net import Mininet_wifi
-from mn_wifi.node import AP
-from mn_wifi.wmediumdConnector import interference
+from mn_wifi.node import AP, Station, Car, OVSKernelAP
+from mn_wifi.wmediumdConnector import snr, interference
 from mn_wifi.link import wmediumd, _4address, TCWirelessLink, ITSLink,\
     wifiDirectLink, adhoc, mesh, physicalMesh, physicalWifiDirectLink
 from mn_wifi.mobility import Mobility as mob
@@ -131,7 +131,21 @@ SAP_PREFIX = 'sap.'
 class Containernet( Mininet_wifi ):
     "Network emulation with hosts spawned in network namespaces."
 
-    def __init__( self ):
+    def __init__( self, topo=None, switch=OVSKernelSwitch,
+                 accessPoint=OVSKernelAP, host=Host, station=Station,
+                 car=Car, controller=DefaultController,
+                 link=TCWirelessLink, intf=Intf, build=True, xterms=False,
+                 cleanup=False, ipBase='10.0.0.0/8', ip6Base='2001:0:0:0:0:0:0:0/64',
+                 inNamespace=False, autoSetMacs=False, autoStaticArp=False,
+                 autoPinCpus=False, listenPort=None, waitConnected=False,
+                 ssid="new-ssid", mode="g", channel=1, wmediumd_mode=snr, roads=0,
+                 fading_cof=0, autoAssociation=True,
+                 allAutoAssociation=True, autoSetPositions=False, configWiFiDirect=False,
+                 config4addr=False, noise_th=-91, cca_th=-90,
+                 disable_tcp_checksum=False, ifb=False,
+                 bridge=False, plot=False, plot3d=False, docker=False,
+                 container='mininet-wifi', ssh_user='alpha',
+                 set_socket_ip=None, set_socket_port=12345 ):
         """Create Mininet object.
            topo: Topo (topology) object or None
            switch: default Switch class

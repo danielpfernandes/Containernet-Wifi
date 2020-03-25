@@ -6,12 +6,11 @@ from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.cli import CLI
 from containernet.term import makeTerm
-from mininet.node import Controller
 from mininet.log import info, setLogLevel
 
 
 def topology():
-    net = Containernet(controller=Controller)
+    net = Containernet()
 
     info('*** Adding docker containers\n')
     sta1 = net.addStation('sta1', ip='10.0.0.3', mac='00:02:00:00:00:10',
