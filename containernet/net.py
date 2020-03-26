@@ -206,7 +206,6 @@ class Containernet( Mininet_wifi ):
         self.apsensors = []
         self.sensors = []
         self.wmediumdMac = []
-        self.accessPoint = OVSKernelAP
         self.autoAssociation = autoAssociation  # does not include mobility
         self.allAutoAssociation = allAutoAssociation  # includes mobility
         self.noise_threshold = -91
@@ -523,13 +522,9 @@ class Containernet( Mininet_wifi ):
 
             # Allow to add links at runtime
             # (needs attach method provided by OVSSwitch)
-            if isinstance(node1, OVSSwitch):
+            if isinstance(node1, OVSSwitch) or isinstance(node1, AP):
                 node1.attach(link.intf1)
-            if isinstance(node2, OVSSwitch):
-                node2.attach(link.intf2)
-            if isinstance(node1, AP):
-                node1.attach(link.intf1)
-            if isinstance(node2, AP):
+            if isinstance(node2, OVSSwitch) or isinstance(node2, AP):
                 node2.attach(link.intf2)
 
             self.links.append(link)
