@@ -103,21 +103,20 @@ from mininet.link import TCULink
 from mininet.log import info, error, debug, output, warn
 from mininet.node import ( Node, DefaultController, Controller, OVSBridge )
 from mininet.nodelib import NAT
-from mininet.util import ( quietRun, fixLimits, ensureRoot, numCores,
+from mininet.util import ( quietRun, fixLimits, ensureRoot,
                            macColonHex, ipStr, ipParse, ipAdd,
-                           waitListening, BaseString, netParse )
+                           waitListening, BaseString )
 from containernet.cli import CLI
 from containernet.node import Docker, OVSKernelSwitch, Host, OVSSwitch
 from containernet.link import TCLink, Intf
 
 from mn_wifi.net import Mininet_wifi
 from mn_wifi.node import AP, Station, Car, OVSKernelAP
-from mn_wifi.util import netParse6
 from mn_wifi.wmediumdConnector import snr, interference
 from mn_wifi.link import wmediumd, _4address, TCWirelessLink, ITSLink,\
-    wifiDirectLink, adhoc, mesh, physicalMesh, physicalWifiDirectLink
-from mn_wifi.mobility import Mobility as mob
+    WifiDirectLink, adhoc, mesh, physicalMesh, PhysicalWifiDirectLink
 from mn_wifi.sixLoWPAN.link import sixLoWPAN
+from mn_wifi.sixLoWPAN.node import OVSSensor, Node_6lowpan
 
 
 # Mininet version: should be consistent with README and LICENSE
@@ -132,149 +131,9 @@ SAP_PREFIX = 'sap.'
 class Containernet( Mininet_wifi ):
     "Network emulation with hosts spawned in network namespaces."
 
-    def __init__( self, topo=None, switch=OVSKernelSwitch,
-                  accessPoint=OVSKernelAP, host=Host, station=Station,
-                  car=Car, controller=DefaultController,
-                  link=TCWirelessLink, intf=Intf, build=True, xterms=False,
-                  cleanup=False, ipBase='10.0.0.0/8', ip6Base='2001:0:0:0:0:0:0:0/64',
-                  inNamespace=False, autoSetMacs=False, autoStaticArp=False,
-                  autoPinCpus=False, listenPort=None, waitConnected=False,
-                  wmediumd_mode=snr, roads=0, fading_cof=0, autoAssociation=True,
-                  allAutoAssociation=True, configWiFiDirect=False,
-                  config4addr=False, noise_th=-91, cca_th=-90,
-                  disable_tcp_checksum=False, ifb=False,
-                  bridge=False, plot=False, plot3d=False, docker=False,
-                  container='mininet-wifi', ssh_user='alpha',
-                  set_socket_ip=None, set_socket_port=12345 ):
-        """Create Mininet object.
-           topo: Topo (topology) object or None
-           switch: default Switch class
-           host: default Host class/constructor
-           controller: default Controller class/constructor
-           link: default Link class/constructor
-           intf: default Intf class/constructor
-           ipBase: base IP address for hosts,
-           build: build now from topo?
-           xterms: if build now, spawn xterms?
-           cleanup: if build now, cleanup before creating?
-           inNamespace: spawn switches and controller in net namespaces?
-           autoSetMacs: set MAC addrs automatically like IP addresses?
-           autoStaticArp: set all-pairs static MAC addrs?
-           autoPinCpus: pin hosts to (real) cores (requires CPULimitedHost)?
-           listenPort: base listening port to open; will be incremented for
-               each additional switch in the net if inNamespace=False"""
-
-        super(Containernet, self).__init__()
-        self.topo = topo
-        self.switch = switch
-        self.host = host
-        self.station = station
-        self.accessPoint = accessPoint
-        self.controller = controller
-        self.link = link
-        self.intf = intf
-        self.ipBase = ipBase
-        self.ip6Base = ip6Base
-        self.ipBaseNum, self.prefixLen = netParse(self.ipBase)
-        self.ip6BaseNum, self.prefixLen6 = netParse6(self.ip6Base)
-        hostIP = (0xffffffff >> self.prefixLen) & self.ipBaseNum
-        # Start for address allocation
-        self.nextIP = hostIP if hostIP > 0 else 1
-        self.nextIP6 = 1
-        self.inNamespace = inNamespace
-        self.xterms = xterms
-        self.cleanup = cleanup
-        self.autoSetMacs = autoSetMacs
-        self.autoStaticArp = autoStaticArp
-        self.autoPinCpus = autoPinCpus
-        self.numCores = numCores()
-        self.nextCore = 0  # next core for pinning hosts to CPUs
-        self.listenPort = listenPort
-        self.waitConn = waitConnected
-        self.channel = 1
-        self.mode = 'g'
-        self.autoSetPositions = ''
-        self.nextPos_sta = 1
-        self.n_radios = 0
-        self.hosts = []
-        self.switches = []
-        self.aps = []
-        self.cars = []
-        self.sixLP = []
-        self.controllers = []
-        self.stations = []
-        self.apsensors = []
-        self.sensors = []
-        self.wmediumdMac = []
-        self.autoAssociation = autoAssociation  # does not include mobility
-        self.allAutoAssociation = allAutoAssociation  # includes mobility
-        self.noise_threshold = -91
-        self.cca_th = -90
-        self.driver = 'nl80211'
-        self.ssid = 'new-ssid'
-        self.config4addr = False
-        self.configWiFiDirect = False
-        self.wmediumd_mode = wmediumd_mode
-        self.isVanet = False
-        self.bridge = False
-        self.ifb = False
-        self.alt_module = False
-        self.ppm_is_set = False
-        self.docker = False
-        self.draw = False
-        self.isReplaying = False
-        self.wmediumd_started = False
-        self.mob_check = False
-        self.isVanet = False
-        self.links = []
-        self.mob_param = {}
-        self.nameToNode = {}  # name to Node (Host/Switch) objects
-        self.terms = []  # list of spawned xterm processes
+    def __init__( self, **kwargs ):
         self.SAPswitches = {}
-        self.set_socket_ip = set_socket_ip
-        self.set_socket_port = set_socket_port
-        self.docker = docker
-        self.container = container
-        self.ssh_user = ssh_user
-        self.ifb = ifb  # Support to Intermediate Functional Block (IFB) Devices
-        self.bridge = bridge
-        self.init_plot = plot
-        self.init_plot3d = plot3d
-        self.cca_th = cca_th
-        self.configWiFiDirect = configWiFiDirect
-        self.config4addr = config4addr
-        self.fading_cof = fading_cof
-        self.noise_th = noise_th
-        self.mob_param = dict()
-        self.disable_tcp_checksum = disable_tcp_checksum
-        self.roads = roads
-        self.seed = 1
-        self.n_radios = 0
-        self.min_v = 1
-        self.max_v = 10
-        self.min_x = 0
-        self.min_y = 0
-        self.min_z = 0
-        self.max_x = 100
-        self.max_y = 100
-        self.max_z = 0
-        self.conn = {}
-        self.wlinks = []
-        # Mininet_wifi.init()  # Initialize Mininet if necessary
-
-        if self.set_socket_ip:
-            self.server()
-
-        if self.autoSetPositions and self.link == wmediumd:
-            self.wmediumd_mode = interference
-
-        if not self.allAutoAssociation:
-            self.autoAssociation = False
-            mob.allAutoAssociation = False
-
-        self.built = False
-        if self.topo and self.build:
-            self.build()
+        Mininet_wifi.__init__(self, **kwargs)
 
     def waitConnected( self, timeout=None, delay=.5 ):
         """wait for each switch to connect to a controller,
@@ -460,7 +319,7 @@ class Containernet( Mininet_wifi ):
         cls = self.link if cls is None else cls
 
         modes = [mesh, physicalMesh, adhoc, ITSLink,
-                 wifiDirectLink, physicalWifiDirectLink]
+                 WifiDirectLink, PhysicalWifiDirectLink]
         if cls in modes:
             cls(node=node1, **params)
         elif cls == sixLoWPAN:
