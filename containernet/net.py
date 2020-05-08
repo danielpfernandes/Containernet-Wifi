@@ -101,22 +101,21 @@ from six import string_types
 from mininet.net import Mininet
 from mininet.link import TCULink
 from mininet.log import info, error, debug, output, warn
-from mininet.node import ( Node, DefaultController, Controller, OVSBridge )
+from mininet.node import Node, Controller, OVSBridge
 from mininet.nodelib import NAT
 from mininet.util import ( quietRun, fixLimits, ensureRoot,
                            macColonHex, ipStr, ipParse, ipAdd,
                            waitListening, BaseString )
 from containernet.cli import CLI
-from containernet.node import Docker, OVSKernelSwitch, Host, OVSSwitch
-from containernet.link import TCLink, Intf
+from containernet.node import Docker, OVSSwitch
+from containernet.link import TCLink
 
 from mn_wifi.net import Mininet_wifi
-from mn_wifi.node import AP, Station, Car, OVSKernelAP
-from mn_wifi.wmediumdConnector import snr, interference
-from mn_wifi.link import wmediumd, _4address, TCWirelessLink, ITSLink,\
+from mn_wifi.node import AP
+from mn_wifi.wmediumdConnector import interference
+from mn_wifi.link import wmediumd, _4address, WirelessLink, ITSLink,\
     WifiDirectLink, adhoc, mesh, physicalMesh, PhysicalWifiDirectLink
-from mn_wifi.sixLoWPAN.link import sixLoWPAN
-from mn_wifi.sixLoWPAN.node import OVSSensor, Node_6lowpan
+from mn_wifi.sixLoWPAN.link import TC6LoWPANLink
 
 
 # Mininet version: should be consistent with README and LICENSE
@@ -322,7 +321,7 @@ class Containernet( Mininet_wifi ):
                  WifiDirectLink, PhysicalWifiDirectLink]
         if cls in modes:
             cls(node=node1, **params)
-        elif cls == sixLoWPAN:
+        elif cls == TC6LoWPANLink:
             link = cls(node=node1, port=port1, **params)
             self.links.append(link)
             return link
@@ -371,7 +370,7 @@ class Containernet( Mininet_wifi ):
             options.setdefault('addr1', self.randMac())
             options.setdefault('addr2', self.randMac())
 
-            if not cls or cls == wmediumd or cls == TCWirelessLink:
+            if not cls or cls == wmediumd or cls == WirelessLink:
                 cls = TCLink
             if self.disable_tcp_checksum:
                 cls = TCULink

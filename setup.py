@@ -2,7 +2,7 @@
 
 "Setuptools params"
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from os.path import join
 
 # Get version number from source tree
@@ -20,14 +20,15 @@ setup(
     description='Mininet fork that adds Container support.',
     author='Manuel Peuster',
     author_email='manuel.peuster@upb.de',
-    packages=[ 'containernet', 'containernet.examples', 'mininet-wifi.mn_wifi' ],
+    packages=[ 'containernet', 'containernet.examples', 'mininet-wifi.mininet.mininet',
+               'mininet-wifi.mn_wifi'],
     long_description="""
         Mininet is a network emulator which uses lightweight
         virtualization to create virtual networks for rapid
         prototyping of Software-Defined Network (SDN) designs
         using OpenFlow. http://mininet.org
         Mininet author: Bob Lantz (rlantz@cs.stanford.edu)
- 
+
         Containernet is a fork of Mininet that allows
         to use Docker containers as hosts in emulated
         networks.
