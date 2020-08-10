@@ -24,7 +24,7 @@ def topology():
     net.configureWifiNodes()
 
     info('*** Starting network\n')
-    net.start()
+    net.build()
     ap1.start([c0])
 
     makeTerm(sta1, cmd="bash -c 'apt-get update && apt-get install iw;'")
