@@ -311,10 +311,6 @@ class Containernet( Mininet_wifi ):
         node2 = node2 if not isinstance(node2, string_types) else self[node2]
         options = dict(params)
 
-        self.conn.setdefault('src', [])
-        self.conn.setdefault('dst', [])
-        self.conn.setdefault('ls', [])
-
         cls = self.link if cls is None else cls
 
         modes = [mesh, physicalMesh, adhoc, ITSLink,
@@ -326,11 +322,6 @@ class Containernet( Mininet_wifi ):
             self.links.append(link)
             return link
         elif cls == _4address:
-            if 'position' in node1.params and 'position' in node2.params:
-                self.conn['src'].append(node1)
-                self.conn['dst'].append(node2)
-                self.conn['ls'].append('--')
-
             if node1 not in self.aps:
                 self.aps.append(node1)
             elif node2 not in self.aps:
@@ -356,10 +347,6 @@ class Containernet( Mininet_wifi ):
             if 'link' in options:
                 options.pop('link', None)
 
-            if 'position' in node1.params and 'position' in node2.params:
-                self.conn['src'].append(node1)
-                self.conn['dst'].append(node2)
-                self.conn['ls'].append('-')
             # Port is optional
             if port1 is not None:
                 options.setdefault('port1', port1)
