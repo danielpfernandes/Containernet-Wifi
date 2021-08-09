@@ -507,7 +507,8 @@ class Containernet( Mininet_wifi ):
         info( '*** Stopping %i switches\n' % len( nodesL2 ) )
         stopped = {}
         for swclass, switches in groupby(
-                sorted(nodesL2, key=type), type):
+                sorted(self.switches,
+                       key=lambda s: str(type(s))), type):
             switches = tuple(switches)
             if hasattr(swclass, 'batchShutdown'):
                 success = swclass.batchShutdown(switches)
