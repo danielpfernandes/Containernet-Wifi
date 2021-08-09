@@ -26,19 +26,8 @@ UserSwitch: a switch using the user-space switch from the OpenFlow
 OVSSwitch: a switch using the Open vSwitch OpenFlow-compatible switch
     implementation (openvswitch.org).
 
-OVSBridge: an Ethernet bridge implemented using Open vSwitch.
-    Supports STP.
-
-IVSSwitch: OpenFlow switch using the Indigo Virtual Switch.
-
 Controller: superclass for OpenFlow controllers. The default controller
     is controller(8) from the reference implementation.
-
-OVSController: The test controller from Open vSwitch.
-
-NOXController: a controller node using NOX (noxrepo.org).
-
-Ryu: The Ryu controller (https://osrg.github.io/ryu/)
 
 RemoteController: a remote controller node, which may use any
     arbitrary OpenFlow-compatible controller, and which is not
@@ -51,6 +40,7 @@ Future enhancements:
 
 - Create proxy objects for remote nodes (Mininet: Cluster Edition)
 """
+import errno
 import os
 import re
 import pty
@@ -58,14 +48,15 @@ import select
 import docker
 import json
 from subprocess import check_output
+from time import sleep
 from re import findall
 
 from mininet.node import Node, Host
 from mininet.moduledeps import moduleDeps, pathCheck, TUN
-from mininet.util import ( quietRun, errRun)
+from mininet.util import ( quietRun, errRun, which)
 from mininet.log import info, error, warn, debug
-from containernet.link import Intf, TCIntf, OVSIntf
 from mn_wifi.node import Station
+from containernet.link import Intf, TCIntf, OVSIntf
 from distutils.version import StrictVersion
 
 
@@ -120,8 +111,16 @@ class Docker ( Host ):
                      'port_bindings': {},
                      'ports': [],
                      'dns': [],
+                     'ipc_mode': None,
+                     'devices': [],
+                     'cap_add': ['net_admin'],  # we need this to allow mininet network setup
+                     'storage_opt': None,
+                     'sysctls': {}
                      }
         defaults.update( kwargs )
+
+        if 'net_admin' not in defaults['cap_add']:
+            defaults['cap_add'] += ['net_admin']  # adding net_admin if it's cleared out to allow mininet network setup
 
         # keep resource in a dict for easy update during container lifetime
         self.resources = dict(
@@ -142,6 +141,11 @@ class Docker ( Host ):
         self.publish_all_ports = defaults['publish_all_ports']
         self.port_bindings = defaults['port_bindings']
         self.dns = defaults['dns']
+        self.ipc_mode = defaults['ipc_mode']
+        self.devices = defaults['devices']
+        self.cap_add = defaults['cap_add']
+        self.sysctls = defaults['sysctls']
+        self.storage_opt = defaults['storage_opt']
 
         # setup docker client
         # self.dcli = docker.APIClient(base_url='unix://var/run/docker.sock')
@@ -160,7 +164,7 @@ class Docker ( Host ):
         # see: https://docker-py.readthedocs.org/en/latest/hostconfig/
         hc = self.dcli.create_host_config(
             network_mode=self.network_mode,
-            privileged=True,  # we need this to allow mininet network setup
+            privileged=False,  # no longer need privileged, using net_admin capability instead
             binds=self.volumes,
             tmpfs=self.tmpfs,
             publish_all_ports=self.publish_all_ports,
@@ -168,6 +172,11 @@ class Docker ( Host ):
             mem_limit=self.resources.get('mem_limit'),
             cpuset_cpus=self.resources.get('cpuset_cpus'),
             dns=self.dns,
+            ipc_mode=self.ipc_mode,  # string
+            devices=self.devices,  # see docker-py docu
+            cap_add=self.cap_add,  # see docker-py docu
+            sysctls=self.sysctls,  # see docker-py docu
+            storage_opt=self.storage_opt
         )
 
         if kwargs.get("rm", False):
@@ -567,7 +576,7 @@ class Docker ( Host ):
             return -1
 
 
-class DockerSta ( Station ):
+class DockerSta(Station):
     """Node that represents a docker container.
     This part is inspired by:
     http://techandtrains.com/2014/08/21/docker-container-as-mininet-host/
@@ -619,6 +628,11 @@ class DockerSta ( Station ):
                      'port_bindings': {},
                      'ports': [],
                      'dns': [],
+                     'ipc_mode': None,
+                     'devices': [],
+                     'cap_add': ['net_admin'],  # we need this to allow mininet network setup
+                     'storage_opt': None,
+                     'sysctls': {}
                      }
         defaults.update( kwargs )
 
@@ -641,6 +655,11 @@ class DockerSta ( Station ):
         self.publish_all_ports = defaults['publish_all_ports']
         self.port_bindings = defaults['port_bindings']
         self.dns = defaults['dns']
+        self.ipc_mode = defaults['ipc_mode']
+        self.devices = defaults['devices']
+        self.cap_add = defaults['cap_add']
+        self.sysctls = defaults['sysctls']
+        self.storage_opt = defaults['storage_opt']
 
         # setup docker client
         # self.dcli = docker.APIClient(base_url='unix://var/run/docker.sock')
@@ -659,7 +678,7 @@ class DockerSta ( Station ):
         # see: https://docker-py.readthedocs.org/en/latest/hostconfig/
         hc = self.dcli.create_host_config(
             network_mode=self.network_mode,
-            privileged=True,  # we need this to allow mininet network setup
+            privileged=False,  # no longer need privileged, using net_admin capability instead
             binds=self.volumes,
             tmpfs=self.tmpfs,
             publish_all_ports=self.publish_all_ports,
@@ -667,6 +686,11 @@ class DockerSta ( Station ):
             mem_limit=self.resources.get('mem_limit'),
             cpuset_cpus=self.resources.get('cpuset_cpus'),
             dns=self.dns,
+            ipc_mode=self.ipc_mode,  # string
+            devices=self.devices,  # see docker-py docu
+            cap_add=self.cap_add,  # see docker-py docu
+            sysctls=self.sysctls,  # see docker-py docu
+            storage_opt=self.storage_opt
         )
 
         if kwargs.get("rm", False):
@@ -1065,7 +1089,7 @@ class DockerSta ( Station ):
             return -1
 
 
-class Switch( Node ):
+class Switch(Node):
     """A Switch is a Node that is running (or has execed?)
        an OpenFlow switch."""
 
@@ -1270,6 +1294,7 @@ class OVSSwitch( Switch ):
         prefix = params.get('prefix', '')
         self.deployed_name = prefix + name
 
+
     @classmethod
     def setup( cls ):
         "Make sure Open vSwitch is installed and working"
@@ -1327,7 +1352,8 @@ class OVSSwitch( Switch ):
     def attachInternalIntf(self, intf_name, net):
         """Add an interface of type:internal to the ovs switch
            and add routing entry to host"""
-        self.vsctl('add-port', self.deployed_name, intf_name, '--', 'set', ' interface', intf_name, 'type=internal')
+        self.vsctl('add-port', self.deployed_name, intf_name, '--', 'set',
+                   ' interface', intf_name, 'type=internal')
         int_intf = Intf(intf_name, node=self.deployed_name)
         #self.addIntf(int_intf, moveIntfFn=None)
         self.cmd('ip route add', net, 'dev', intf_name)
