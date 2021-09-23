@@ -114,7 +114,7 @@ class Docker ( Host ):
                      'ipc_mode': None,
                      'devices': [],
                      'cap_add': ['net_admin'],  # we need this to allow mininet network setup
-                     'storage_opt': None,
+                     #'storage_opt': None,
                      'sysctls': {}
                      }
         defaults.update( kwargs )
@@ -145,7 +145,7 @@ class Docker ( Host ):
         self.devices = defaults['devices']
         self.cap_add = defaults['cap_add']
         self.sysctls = defaults['sysctls']
-        self.storage_opt = defaults['storage_opt']
+        #self.storage_opt = defaults['storage_opt']
 
         # setup docker client
         # self.dcli = docker.APIClient(base_url='unix://var/run/docker.sock')
@@ -176,7 +176,7 @@ class Docker ( Host ):
             devices=self.devices,  # see docker-py docu
             cap_add=self.cap_add,  # see docker-py docu
             sysctls=self.sysctls,  # see docker-py docu
-            storage_opt=self.storage_opt
+            #storage_opt=self.storage_opt
         )
 
         if kwargs.get("rm", False):
@@ -631,7 +631,7 @@ class DockerSta(Station):
                      'ipc_mode': None,
                      'devices': [],
                      'cap_add': ['net_admin'],  # we need this to allow mininet network setup
-                     'storage_opt': None,
+                     #'storage_opt': None,
                      'sysctls': {}
                      }
         defaults.update( kwargs )
@@ -659,7 +659,7 @@ class DockerSta(Station):
         self.devices = defaults['devices']
         self.cap_add = defaults['cap_add']
         self.sysctls = defaults['sysctls']
-        self.storage_opt = defaults['storage_opt']
+        #self.storage_opt = defaults['storage_opt']
 
         # setup docker client
         # self.dcli = docker.APIClient(base_url='unix://var/run/docker.sock')
@@ -690,7 +690,7 @@ class DockerSta(Station):
             devices=self.devices,  # see docker-py docu
             cap_add=self.cap_add,  # see docker-py docu
             sysctls=self.sysctls,  # see docker-py docu
-            storage_opt=self.storage_opt
+            #storage_opt=self.storage_opt
         )
 
         if kwargs.get("rm", False):

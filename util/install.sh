@@ -104,14 +104,26 @@ function version_ge {
     [ "$1" == "$latest" ]
 }
 
-# Attempt to identify Python version
+# Attempt to detect Python version
 PYTHON=${PYTHON:-python}
-if $PYTHON --version |& grep 'Python 2' > /dev/null; then
-    PYTHON_VERSION=2; PYPKG=python
-else
-    PYTHON_VERSION=3; PYPKG=python3
+PRINTVERSION='import sys; print(sys.version_info)'
+PYTHON_VERSION=unknown
+for python in $PYTHON python2 python3; do
+    if $python -c "$PRINTVERSION" |& grep 'major=2'; then
+        PYTHON=$python; PYTHON_VERSION=2; PYPKG=python
+        break
+    elif $python -c "$PRINTVERSION" |& grep 'major=3'; then
+        PYTHON=$python; PYTHON_VERSION=3; PYPKG=python3
+        break
+    fi
+done
+if [ "$PYTHON_VERSION" == unknown ]; then
+    echo "Can't find a working python command ('$PYTHON' doesn't work.)"
+    echo "You may wish to export PYTHON or install a working 'python'."
+    exit 1
 fi
-echo "${PYTHON} is version ${PYTHON_VERSION}"
+
+echo "Detected Python (${PYTHON}) version ${PYTHON_VERSION}"
 
 # Kernel Deb pkg to be removed:
 KERNEL_IMAGE_OLD=linux-image-2.6.26-33-generic
@@ -473,144 +485,6 @@ function remove_ovs {
     echo "Done removing OVS"
 }
 
-function ivs {
-    echo "Installing Indigo Virtual Switch..."
-
-    IVS_SRC=$BUILD_DIR/ivs
-
-    # Install dependencies
-    $install gcc make
-    if [ "$DIST" = "Fedora" -o "$DIST" = "RedHatEnterpriseServer" ]; then
-        $install git pkgconfig libnl3-devel libcap-devel openssl-devel
-    else
-        $install git-core pkg-config libnl-3-dev libnl-route-3-dev \
-            libnl-genl-3-dev
-    fi
-
-    # Install IVS from source
-    cd $BUILD_DIR
-    git clone https://github.com/floodlight/ivs $IVS_SRC
-    cd $IVS_SRC
-    git submodule update --init
-    make
-    sudo make install
-}
-
-# Install RYU
-function ryu {
-    echo "Installing RYU..."
-
-    # install Ryu dependencies"
-    $install autoconf automake g++ libtool python make
-    if [ "$DIST" = "Ubuntu" -o "$DIST" = "Debian" ]; then
-        $install gcc python-pip python-dev libffi-dev libssl-dev \
-            libxml2-dev libxslt1-dev zlib1g-dev
-        sudo pip install --upgrade gevent pbr webob routes paramiko \\
-            oslo.config
-    fi
-
-    # if needed, update python-six
-    SIX_VER=`pip show six | grep Version | awk '{print $2}'`
-    if version_ge 1.7.0 $SIX_VER; then
-        echo "Installing python-six version 1.7.0..."
-        sudo pip install -I six==1.7.0
-    fi
-    # fetch RYU
-    cd $BUILD_DIR/
-    git clone https://github.com/osrg/ryu ryu
-    cd ryu
-
-    # install ryu
-    sudo pip install -r tools/pip-requires -r tools/optional-requires \
-        -r tools/test-requires
-    sudo python setup.py install
-
-    # Add symbolic link to /usr/bin
-    sudo ln -s ./bin/ryu-manager /usr/local/bin/ryu-manager
-}
-
-# Install NOX with tutorial files
-function nox {
-    echo "Installing NOX w/tutorial files..."
-
-    # Install NOX deps:
-    $install autoconf automake g++ libtool python python-twisted \
-		swig libssl-dev make
-    if [ "$DIST" = "Debian" ]; then
-        $install libboost1.35-dev
-    elif [ "$DIST" = "Ubuntu" ]; then
-        $install python-dev libboost-dev
-        $install libboost-filesystem-dev
-        $install libboost-test-dev
-    fi
-    # Install NOX optional deps:
-    $install libsqlite3-dev python-simplejson
-
-    # Fetch NOX destiny
-    cd $BUILD_DIR/
-    git clone https://github.com/noxrepo/nox-classic.git noxcore
-    cd noxcore
-    if ! git checkout -b destiny remotes/origin/destiny ; then
-        echo "Did not check out a new destiny branch - assuming current branch is destiny"
-    fi
-
-    # Apply patches
-    git checkout -b tutorial-destiny
-    git am $MININET_DIR/containernet/util/nox-patches/*tutorial-port-nox-destiny*.patch
-    if [ "$DIST" = "Ubuntu" ] && version_ge $RELEASE 12.04; then
-        git am $MININET_DIR/containernet/util/nox-patches/*nox-ubuntu12-hacks.patch
-    fi
-
-    # Build
-    ./boot.sh
-    mkdir build
-    cd build
-    ../configure
-    make -j3
-    #make check
-
-    # Add NOX_CORE_DIR env var:
-    sed -i -e 's|# for examples$|&\nexport NOX_CORE_DIR=$BUILD_DIR/noxcore/build/src|' ~/.bashrc
-
-    # To verify this install:
-    #cd ~/noxcore/build/src
-    #./nox_core -v -i ptcp:
-}
-
-# Install NOX Classic/Zaku for OpenFlow 1.3
-function nox13 {
-    echo "Installing NOX w/tutorial files..."
-
-    # Install NOX deps:
-    $install autoconf automake g++ libtool python python-twisted \
-        swig libssl-dev make
-    if [ "$DIST" = "Debian" ]; then
-        $install libboost1.35-dev
-    elif [ "$DIST" = "Ubuntu" ]; then
-        $install python-dev libboost-dev
-        $install libboost-filesystem-dev
-        $install libboost-test-dev
-    fi
-
-    # Fetch NOX destiny
-    cd $BUILD_DIR/
-    git clone https://github.com/CPqD/nox13oflib.git
-    cd nox13oflib
-
-    # Build
-    ./boot.sh
-    mkdir build
-    cd build
-    ../configure
-    make -j3
-    #make check
-
-    # To verify this install:
-    #cd ~/nox13oflib/build/src
-    #./nox_core -v -i ptcp:
-}
-
-
 # "Install" POX
 function pox {
     echo "Installing POX into $BUILD_DIR/pox..."
@@ -767,10 +641,6 @@ function all {
     of
     install_wireshark
     ovs
-    # We may add ivs once it's more mature
-    # ivs
-    # NOX-classic is deprecated, but you can install it manually if desired.
-    # nox
     pox
     oftest
     cbench
@@ -825,7 +695,7 @@ exit 0
 }
 
 function usage {
-    printf '\nUsage: %s [-abcdfhikmnprtvVwWxy03]\n\n' $(basename $0) >&2
+    printf '\nUsage: %s [-abcdfhikmnprtvVwW03]\n\n' $(basename $0) >&2
 
     printf 'This install script attempts to install useful packages\n' >&2
     printf 'for Mininet. It should (hopefully) work on Ubuntu 11.10+\n' >&2
@@ -841,7 +711,6 @@ function usage {
     printf -- ' -e: install Mininet d(E)veloper dependencies\n' >&2
     printf -- ' -f: install Open(F)low\n' >&2
     printf -- ' -h: print this (H)elp message\n' >&2
-    printf -- ' -i: install (I)ndigo Virtual Switch\n' >&2
     printf -- ' -k: install new (K)ernel\n' >&2
     printf -- ' -m: install Open vSwitch kernel (M)odule from source dir\n' >&2
     printf -- ' -n: install Mini(N)et dependencies + core files\n' >&2
@@ -852,8 +721,7 @@ function usage {
     printf -- ' -v: install Open (V)switch\n' >&2
     printf -- ' -V <version>: install a particular version of Open (V)switch on Ubuntu\n' >&2
     printf -- ' -w: install OpenFlow (W)ireshark dissector\n' >&2
-    printf -- ' -y: install R(y)u Controller\n' >&2
-    printf -- ' -x: install NO(X) Classic OpenFlow controller\n' >&2
+    printf -- ' -W: install Mininet-WiFi\n' >&2
     printf -- ' -0: (default) -0[fx] installs OpenFlow 1.0 versions\n' >&2
     printf -- ' -3: -3[fx] installs OpenFlow 1.3 versions\n' >&2
     exit 2
@@ -865,7 +733,7 @@ if [ $# -eq 0 ]
 then
     all
 else
-    while getopts 'abcdefhikmnprs:tvV:wWxy03' OPTION
+    while getopts 'abcdefhikmnprs:tvV:wW03' OPTION
     do
       case $OPTION in
       a)    all;;
@@ -879,7 +747,6 @@ else
             *)  echo "Invalid OpenFlow version $OF_VERSION";;
             esac;;
       h)    usage;;
-      i)    ivs;;
       k)    kernel;;
       m)    modprobe;;
       n)    mn_deps;;
@@ -899,7 +766,6 @@ else
             1.3) nox13;;
             *)  echo "Invalid OpenFlow version $OF_VERSION";;
             esac;;
-      y)    ryu;;
       0)    OF_VERSION=1.0;;
       3)    OF_VERSION=1.3;;
       ?)    usage;;
