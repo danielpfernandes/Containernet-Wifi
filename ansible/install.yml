@@ -2,7 +2,6 @@
   tasks:
    - name: updates apt
      apt:
-       name: apt-get update
        update_cache: yes
 
    - name: install basic packages
@@ -29,7 +28,6 @@
 
    - name: install Docker CE repos (3/3)
      apt:
-       name: apt-get update
        update_cache: yes
 
    - name: install Docker CE
