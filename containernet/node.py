@@ -107,6 +107,7 @@ class Docker ( Host ):
                      'volumes': [],  # use ["/home/user1/:/mnt/vol2:rw"]
                      'tmpfs': [], # use ["/home/vol1/:size=3G,uid=1000"]
                      'network_mode': None,
+                     'privileged': False,
                      'publish_all_ports': True,
                      'port_bindings': {},
                      'ports': [],
@@ -138,6 +139,7 @@ class Docker ( Host ):
         # setting PS1 at "docker run" may break the python docker api (update_container hangs...)
         # self.environment.update({"PS1": chr(127)})  # CLI support
         self.network_mode = defaults['network_mode']
+        self.privileged = defaults['privileged']
         self.publish_all_ports = defaults['publish_all_ports']
         self.port_bindings = defaults['port_bindings']
         self.dns = defaults['dns']
@@ -164,7 +166,7 @@ class Docker ( Host ):
         # see: https://docker-py.readthedocs.org/en/latest/hostconfig/
         hc = self.dcli.create_host_config(
             network_mode=self.network_mode,
-            privileged=False,  # no longer need privileged, using net_admin capability instead
+            privileged=self.privileged,
             binds=self.volumes,
             tmpfs=self.tmpfs,
             publish_all_ports=self.publish_all_ports,
@@ -624,6 +626,7 @@ class DockerSta(Station):
                      'volumes': [],  # use ["/home/user1/:/mnt/vol2:rw"]
                      'tmpfs': [], # use ["/home/vol1/:size=3G,uid=1000"]
                      'network_mode': None,
+                     'privileged': False,
                      'publish_all_ports': True,
                      'port_bindings': {},
                      'ports': [],
@@ -652,6 +655,7 @@ class DockerSta(Station):
         # setting PS1 at "docker run" may break the python docker api (update_container hangs...)
         # self.environment.update({"PS1": chr(127)})  # CLI support
         self.network_mode = defaults['network_mode']
+        self.privileged = defaults['privileged']
         self.publish_all_ports = defaults['publish_all_ports']
         self.port_bindings = defaults['port_bindings']
         self.dns = defaults['dns']
@@ -678,7 +682,7 @@ class DockerSta(Station):
         # see: https://docker-py.readthedocs.org/en/latest/hostconfig/
         hc = self.dcli.create_host_config(
             network_mode=self.network_mode,
-            privileged=False,  # no longer need privileged, using net_admin capability instead
+            privileged=self.privileged,
             binds=self.volumes,
             tmpfs=self.tmpfs,
             publish_all_ports=self.publish_all_ports,
