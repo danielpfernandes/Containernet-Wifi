@@ -67,7 +67,7 @@ class Docker ( Host ):
     We use the docker-py client library to control docker.
     """
 
-    def __init__(self, name, dimage, dcmd=None, **kwargs):
+    def __init__(self, name, dimage=None, dcmd=None, did=None, **kwargs):
         """
         Creates a Docker container as Mininet host.
 
@@ -94,7 +94,7 @@ class Docker ( Host ):
         self.dc = None  # pointer to the dict containing 'Id' and 'Warnings' keys of the container
         self.dcinfo = None
         self.func = []
-        self.did = None # Id of running container
+        self.did = did  # Id of running container
         #  let's store our resource limits to have them available through the
         #  Mininet API later on
         defaults = { 'cpu_quota': -1,
@@ -105,7 +105,7 @@ class Docker ( Host ):
                      'memswap_limit': None,
                      'environment': {},
                      'volumes': [],  # use ["/home/user1/:/mnt/vol2:rw"]
-                     'tmpfs': [], # use ["/home/vol1/:size=3G,uid=1000"]
+                     'tmpfs': [],  # use ["/home/vol1/:size=3G,uid=1000"]
                      'network_mode': None,
                      'privileged': False,
                      'publish_all_ports': True,
@@ -154,7 +154,8 @@ class Docker ( Host ):
         self.dcli = docker.from_env().api
 
         # pull image if it does not exist
-        self._check_image_exists(dimage, True)
+        if self.dimage:
+            self._check_image_exists(dimage, True)
 
         # for DEBUG
         debug("Created docker container object %s\n" % name)
@@ -189,22 +190,26 @@ class Docker ( Host ):
                         self.dcli.remove_container(container="%s.%s" % (self.dnameprefix, name), force=True)
                         break
 
-        # create new docker container
-        self.dc = self.dcli.create_container(
-            name="%s.%s" % (self.dnameprefix, name),
-            image=self.dimage,
-            command=self.dcmd,
-            entrypoint=list(),  # overwrite (will be executed manually at the end)
-            stdin_open=True,  # keep container open
-            tty=True,  # allocate pseudo tty
-            environment=self.environment,
-            #network_disabled=True,  # docker stats breaks if we disable the default network
-            host_config=hc,
-            ports=defaults['ports'],
-            labels=['com.containernet'],
-            volumes=[self._get_volume_mount_name(v) for v in self.volumes if self._get_volume_mount_name(v) is not None],
-            hostname=name
-        )
+        if self.did:
+            self.dc = {'Id': '{}'.format(self.did), 'Warnings': []}
+            self.existing_container = 1
+        else:
+            # create new docker container
+            self.dc = self.dcli.create_container(
+                name="%s.%s" % (self.dnameprefix, name),
+                image=self.dimage,
+                command=self.dcmd,
+                entrypoint=list(),  # overwrite (will be executed manually at the end)
+                stdin_open=True,  # keep container open
+                tty=True,  # allocate pseudo tty
+                environment=self.environment,
+                #network_disabled=True,  # docker stats breaks if we disable the default network
+                host_config=hc,
+                ports=defaults['ports'],
+                labels=['com.containernet'],
+                volumes=[self._get_volume_mount_name(v) for v in self.volumes if self._get_volume_mount_name(v) is not None],
+                hostname=name
+            )
 
         # start the container
         self.dcli.start(self.dc)
@@ -295,8 +300,12 @@ class Docker ( Host ):
         # bash -i: force interactive
         # -s: pass $* to shell, and make process easy to find in ps
         # prompt is set to sentinel chr( 127 )
-        cmd = [ 'docker', 'exec', '-it',  '%s.%s' % ( self.dnameprefix, self.name ), 'env', 'PS1=' + chr( 127 ),
-                'bash', '--norc', '-is', 'mininet:' + self.name ]
+        if hasattr(self, 'existing_container'):
+            cmd = ['docker', 'exec', '-it', '%s' % self.did, 'env', 'PS1=' + chr(127),
+                   'bash', '--norc', '-is', 'mininet:' + self.name]
+        else:
+            cmd = ['docker', 'exec', '-it', '%s.%s' % (self.dnameprefix, self.name), 'env', 'PS1=' + chr(127),
+                   'bash', '--norc', '-is', 'mininet:' + self.name]
         # Spawn a shell subprocess in a pseudo-tty, to disable buffering
         # in the subprocess and insulate it from signals (e.g. SIGINT)
         # received by the parent
@@ -339,7 +348,8 @@ class Docker ( Host ):
         if not self._is_container_running():
             return
         try:
-            self.dcli.remove_container(self.dc, force=True, v=True)
+            if not hasattr(self, 'existing_container'):
+                self.dcli.remove_container(self.dc, force=True, v=True)
         except docker.errors.APIError:
             warn("Warning: API error during container removal.\n")
 
@@ -585,7 +595,7 @@ class DockerSta(Station):
     We use the docker-py client library to control docker.
     """
 
-    def __init__(self, name, dimage, dcmd=None, **kwargs):
+    def __init__(self, name, dimage=None, dcmd=None, did=None, **kwargs):
         """
         Creates a Docker container as Mininet host.
 
@@ -613,7 +623,7 @@ class DockerSta(Station):
         self.dcinfo = None
         self.wintfs = {}
         self.wports = {}
-        self.did = None # Id of running container
+        self.did = did  # Id of running container
         #  let's store our resource limits to have them available through the
         #  Mininet API later on
         defaults = { 'cpu_quota': -1,
@@ -670,7 +680,8 @@ class DockerSta(Station):
         self.dcli = docker.from_env().api
 
         # pull image if it does not exist
-        self._check_image_exists(dimage, True)
+        if self.dimage:
+            self._check_image_exists(dimage, True)
 
         # for DEBUG
         debug("Created docker container object %s\n" % name)
@@ -705,22 +716,26 @@ class DockerSta(Station):
                         self.dcli.remove_container(container="%s.%s" % (self.dnameprefix, name), force=True)
                         break
 
-        # create new docker container
-        self.dc = self.dcli.create_container(
-            name="%s.%s" % (self.dnameprefix, name),
-            image=self.dimage,
-            command=self.dcmd,
-            entrypoint=list(),  # overwrite (will be executed manually at the end)
-            stdin_open=True,  # keep container open
-            tty=True,  # allocate pseudo tty
-            environment=self.environment,
-            #network_disabled=True,  # docker stats breaks if we disable the default network
-            host_config=hc,
-            ports=defaults['ports'],
-            labels=['com.containernet'],
-            volumes=[self._get_volume_mount_name(v) for v in self.volumes if self._get_volume_mount_name(v) is not None],
-            hostname=name
-        )
+        if self.did:
+            self.dc = {'Id': '{}'.format(self.did), 'Warnings': []}
+            self.existing_container = 1
+        else:
+            # create new docker container
+            self.dc = self.dcli.create_container(
+                name="%s.%s" % (self.dnameprefix, name),
+                image=self.dimage,
+                command=self.dcmd,
+                entrypoint=list(),  # overwrite (will be executed manually at the end)
+                stdin_open=True,  # keep container open
+                tty=True,  # allocate pseudo tty
+                environment=self.environment,
+                #network_disabled=True,  # docker stats breaks if we disable the default network
+                host_config=hc,
+                ports=defaults['ports'],
+                labels=['com.containernet'],
+                volumes=[self._get_volume_mount_name(v) for v in self.volumes if self._get_volume_mount_name(v) is not None],
+                hostname=name
+            )
 
         # start the container
         self.dcli.start(self.dc)
@@ -811,8 +826,12 @@ class DockerSta(Station):
         # bash -i: force interactive
         # -s: pass $* to shell, and make process easy to find in ps
         # prompt is set to sentinel chr( 127 )
-        cmd = [ 'docker', 'exec', '-it',  '%s.%s' % ( self.dnameprefix, self.name ), 'env', 'PS1=' + chr( 127 ),
-                'bash', '--norc', '-is', 'mininet:' + self.name ]
+        if hasattr(self, 'existing_container'):
+            cmd = ['docker', 'exec', '-it', '%s' % self.did, 'env', 'PS1=' + chr(127),
+                   'bash', '--norc', '-is', 'mininet:' + self.name]
+        else:
+            cmd = [ 'docker', 'exec', '-it',  '%s.%s' % ( self.dnameprefix, self.name ), 'env', 'PS1=' + chr( 127 ),
+                    'bash', '--norc', '-is', 'mininet:' + self.name ]
         # Spawn a shell subprocess in a pseudo-tty, to disable buffering
         # in the subprocess and insulate it from signals (e.g. SIGINT)
         # received by the parent
@@ -855,7 +874,8 @@ class DockerSta(Station):
         if not self._is_container_running():
             return
         try:
-            self.dcli.remove_container(self.dc, force=True, v=True)
+            if not hasattr(self, 'existing_container'):
+                self.dcli.remove_container(self.dc, force=True, v=True)
         except docker.errors.APIError:
             warn("Warning: API error during container removal.\n")
 
