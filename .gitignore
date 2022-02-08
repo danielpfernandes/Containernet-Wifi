@@ -20,3 +20,5 @@ trunk
 examples/uav/CoppeliaSim_Edu_V4_1_0_Ubuntu/*
 *-telemetry.txt
 ansible/install.retry
+data/*
+prometheus/data/*

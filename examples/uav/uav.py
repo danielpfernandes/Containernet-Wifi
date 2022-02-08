@@ -6,11 +6,9 @@ import time
 import os
 
 from mininet.log import setLogLevel, info
-from mn_wifi.link import wmediumd, adhoc
+from mn_wifi.link import adhoc
 from mn_wifi.cli import CLI
-from mn_wifi.net import Mininet_wifi
 from mn_wifi.telemetry import telemetry
-from mn_wifi.wmediumdConnector import interference
 from containernet.net import Containernet
 from containernet.node import DockerSta
 
