@@ -11,6 +11,7 @@ from mn_wifi.telemetry import telemetry
 from mininet.log import info, setLogLevel
 from containernet.net import Containernet
 from containernet.node import DockerSta
+from containernet.term import makeTerm, makeTerms
 
 def topology():
     setLogLevel('info')
@@ -54,7 +55,7 @@ def topology():
                         cpu_shares=2, 
                         cpu_period=50000, 
                         cpu_quota=10000,
-                        position='40,70,10')
+                        position='31,61,10')
 
     # Holybro PX4 Vision
     d3 = net.addStation('drone3', 
@@ -101,6 +102,8 @@ def topology():
     net.setPropagationModel(model="logDistance", exp=4.5)
 
     info("*** Configuring wifi nodes\n")
+    ap1 = net.addAccessPoint('ap1')
+    c0 = net.addController('c0')
     net.configureWifiNodes()
 
     net.addLink(bs1, cls=adhoc, intf='base1-wlan0',
@@ -127,16 +130,17 @@ def topology():
                 ssid='adhocNet', proto='batman_adv',
                 mode='g', channel=5, ht_cap='HT40+')
 
-    info('*** Creating links between drone d1 and base station\n')
     net.addLink(bs1, cls=adhoc, intf='base1-wlan0',
                 ssid='adhocNet', proto='batman_adv',
                 mode='g', channel=5, ht_cap='HT40+')
 
     info('*** Starting network\n')
     net.build()
+    net.start()
+    # ap1.start([c0])
 
-    nodes = net.stations
-    telemetry(nodes=nodes, single=True, data_type='position')
+    #nodes = net.stations
+    #telemetry(nodes=nodes, single=True, data_type='position')
 
     sta_drone = []
     for n in net.stations:
@@ -155,6 +159,13 @@ def topology():
     d3.cmd('python /rest/server.py &')
     d4.cmd('python /rest/server.py &')
     d5.cmd('python /rest/server.py &')
+
+    info('*** Start drone terminals')
+    makeTerm(d1, cmd="bash")
+    makeTerm(d2, cmd="bash")
+    makeTerm(d3, cmd="bash")
+    makeTerm(d4, cmd="bash")
+    makeTerm(d5, cmd="bash")
 
     # info("*** Starting CoppeliaSim\n")
     path = os.path.dirname(os.path.abspath(__file__))
@@ -180,7 +191,7 @@ def topology():
     net.stop()
 
 def kill_process():
-    os.system('pkill -9 -f coppeliaSim')
+    #os.system('pkill -9 -f coppeliaSim')
     os.system('pkill -9 -f simpleTest.py')
     os.system('pkill -9 -f setNodePosition.py')
     os.system('rm examples/uav/data/*')

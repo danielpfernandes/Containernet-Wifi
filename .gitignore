@@ -22,3 +22,5 @@ examples/uav/CoppeliaSim_Edu_V4_1_0_Ubuntu/*
 ansible/install.retry
 data/*
 prometheus/data/*
+mininet-wifi/
+openflow/
