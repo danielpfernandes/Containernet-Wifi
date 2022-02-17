@@ -25,12 +25,13 @@ def topology():
 
     info('*** Starting network\n')
     net.start()
+    ap1.start([c0])
 
-    makeTerm(sta1, cmd="bash -c 'apt-get update && apt-get install iw;'")
-    makeTerm(sta2, cmd="bash -c 'apt-get update && apt-get install iw;'")
+    makeTerm(sta1, cmd="bash -c 'apt-get update && apt-get install iw -Y;'")
+    makeTerm(sta2, cmd="bash -c 'apt-get update && apt-get install iw -Y;'")
 
-    #sta1.cmd('iw dev sta1-wlan0 connect new-ssid')
-    #sta2.cmd('iw dev sta2-wlan0 connect new-ssid')
+    sta1.cmd('iw dev sta1-wlan0 connect new-ssid')
+    sta2.cmd('iw dev sta2-wlan0 connect new-ssid')
 
     info('*** Running CLI\n')
     CLI(net)

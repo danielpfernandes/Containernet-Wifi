@@ -1,0 +1,22 @@
+[
+    {
+        "id": "drone1",
+        "address": "10.0.0.249"
+    },
+    {
+        "id": "drone2",
+        "address": "10.0.0.250"
+    },
+    {
+        "id": "drone3",
+        "address": "10.0.0.251"
+    },
+    {
+        "id": "drone4",
+        "address": "10.0.0.252"
+    },
+    {
+        "id": "drone5",
+        "address": "10.0.0.253"
+    }
+]

@@ -176,18 +176,18 @@ function mn_deps {
     echo "Installing Mininet dependencies"
 
     echo "Installing Mininet core"
-    pushd $MININET_DIR/containernet
+    pushd $MININET_DIR/Containernet-Wifi
     if [ -d mininet ]; then
       echo "Removing Mininet dir..."
       rm -r mininet
     fi
     sudo git clone --depth=1 https://github.com/mininet/mininet.git
-    pushd $MININET_DIR/containernet/mininet
+    pushd $MININET_DIR/Containernet-Wifi/mininet
     sudo util/install.sh -nfv
     sudo PYTHON=${PYTHON} make install
     popd
 
-    pushd $MININET_DIR/containernet
+    pushd $MININET_DIR/Containernet-Wifi
     sudo PYTHON=${PYTHON} make install
     popd
 }
@@ -197,18 +197,18 @@ function mn_wifi_deps {
     echo "Installing Mininet/Mininet-WiFi dependencies"
 
     echo "Installing Mininet-WiFi core"
-    pushd $MININET_DIR/containernet
+    pushd $MININET_DIR/Containernet-Wifi
     if [ -d mininet-wifi ]; then
       echo "Removing Mininet-WiFi dir..."
       rm -r mininet-wifi
     fi
     sudo git clone --depth=1 https://github.com/intrig-unicamp/mininet-wifi.git
-    pushd $MININET_DIR/containernet/mininet-wifi
+    pushd $MININET_DIR/Containernet-Wifi/mininet-wifi
     sudo util/install.sh -Wlnfv
     sudo PYTHON=${PYTHON} make install
     popd
 
-    pushd $MININET_DIR/containernet
+    pushd $MININET_DIR/Containernet-Wifi
     sudo PYTHON=${PYTHON} make install
     popd
 }
@@ -304,7 +304,7 @@ function install_wireshark {
     # Copy coloring rules: OF is white-on-blue:
     echo "Optionally installing wireshark color filters"
     mkdir -p $HOME/.wireshark
-    cp -n $MININET_DIR/containernet/util/colorfilters $HOME/.wireshark
+    cp -n $MININET_DIR/Containernet-Wifi/util/colorfilters $HOME/.wireshark
 
     echo "Checking Wireshark version"
     WSVER=`wireshark -v | egrep -o '[0-9\.]+' | head -1`
