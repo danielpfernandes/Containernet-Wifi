@@ -36,7 +36,7 @@ def topology():
                         cls=DockerSta,
                         dimage="containernet_example:sawtoothAll",
                         ports=[4004,8008,8800,5050,3030,5000],
-                        volumes=["/tmp/drone1/root:/root", "/tmp/drone1/root:/data"],
+                        volumes=["/tmp/drone1/root:/root", "/tmp/drone1/data:/data"],
                         mem_limit=3900182016,
                         cpu_shares=5, 
                         cpu_period=50000, 
@@ -50,7 +50,7 @@ def topology():
                         cls=DockerSta,
                         dimage="containernet_example:sawtoothAll",
                         ports=[4004,8008,8800,5050,3030,5000],
-                        volumes=["/tmp/drone2/root:/root", "/tmp/drone2/root:/data"],
+                        volumes=["/tmp/drone2/root:/root", "/tmp/drone2/data:/data"],
                         mem_limit=958182016,
                         cpu_shares=2, 
                         cpu_period=50000, 
@@ -64,7 +64,7 @@ def topology():
                         cls=DockerSta,
                         dimage="containernet_example:sawtoothAll", 
                         ports=[4004,8008,8800,5050,3030,5000],
-                        volumes=["/tmp/drone3/root:/root", "/tmp/drone3/root:/data"],
+                        volumes=["/tmp/drone3/root:/root", "/tmp/drone3/data:/data"],
                         mem_limit=3900182016,
                         cpu_shares=5, 
                         cpu_period=50000, 
@@ -78,7 +78,7 @@ def topology():
                         cls=DockerSta,
                         dimage="containernet_example:sawtoothAll",
                         ports=[4004,8008,8800,5050,3030,5000],
-                        volumes=["/tmp/drone4/root:/root", "/tmp/drone4/root:/data"],
+                        volumes=["/tmp/drone4/root:/root", "/tmp/drone4/data:/data"],
                         mem_limit=1900182016,
                         cpu_shares=5, 
                         cpu_period=50000, 
@@ -92,7 +92,7 @@ def topology():
                         cls=DockerSta,
                         dimage="containernet_example:sawtoothAll",
                         ports=[4004,8008,8800,5050,3030,5000],
-                        volumes=["/tmp/drone5/root:/root", "/tmp/drone5/root:/data"],
+                        volumes=["/tmp/drone5/root:/root", "/tmp/drone5/data:/data"],
                         mem_limit=3900182016,
                         cpu_shares=10, 
                         cpu_period=50000, 
@@ -154,11 +154,11 @@ def topology():
     net.socketServer(ip='127.0.0.1', port=12345)
 
     info('*** Starting REST server on drones\n')
-    d1.cmd('python /rest/server.py &')
-    d2.cmd('python /rest/server.py &')
-    d3.cmd('python /rest/server.py &')
-    d4.cmd('python /rest/server.py &')
-    d5.cmd('python /rest/server.py &')
+    d1.cmd('python /rest/locationRestServer.py &')
+    d2.cmd('python /rest/locationRestServer.py &')
+    d3.cmd('python /rest/locationRestServer.py &')
+    d4.cmd('python /rest/locationRestServer.py &')
+    d5.cmd('python /rest/locationRestServer.py &')
 
     info('*** Start drone terminals')
     makeTerm(d1, cmd="bash")
@@ -180,8 +180,8 @@ def topology():
     time.sleep(5)
 
     info("*** Configure the node position\n")
-    setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
-    os.system(setNodePosition)
+    #setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
+    #os.system(setNodePosition)
 
     info('*** Running CLI\n')
     CLI(net)

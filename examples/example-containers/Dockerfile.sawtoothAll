@@ -1,4 +1,5 @@
 FROM hyperledger/sawtooth-all:1.1.3
+
 RUN apt-get update && apt-get install -y \
     net-tools \
     iputils-ping \
@@ -6,14 +7,16 @@ RUN apt-get update && apt-get install -y \
     netcat \
     iperf \
     sawtooth \
-    python-pip
+    python-pip \
+    iw
 
-RUN apt-get install iw -y
 RUN pip install --upgrade pip==19.3.1
 RUN pip install flask && pip install requests
 RUN pip install pandas
 RUN mkdir /data
 
-ADD rest/ /rest/
+COPY rest/* /rest/
+
+ENV PATH="/rest:${PATH}"
 
 CMD /bin/bash

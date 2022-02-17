@@ -1,11 +1,15 @@
+#!/usr/bin/env python3
 import codecs, time, socket
-import encodings
+import subprocess
 import logging
-import os
 import pandas as pd
 from flask import Flask, json, request
 
-logging.basicConfig(filename='/data/server.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename="/data/locationRestServer.log",
+                    filemode='a',
+                    format="%(asctime)s %(name)s:%(levelname)s:%(message)s",
+                    level=logging.DEBUG)
+
 locations = [{"latitude": 0, "longitude": 0, "heigth": 0, 'timestamp': time.time()}]
 
 api = Flask(__name__)
@@ -34,11 +38,12 @@ def propagate_message(new_coordinates):
 
     for drone_ip in drones_ip_list:
         logging.info('Sending coordinates ' + str(new_coordinates) + ' to host' + str(drone_ip))
-        os.system('python /rest/client.py '
+        result = subprocess.Popen('setLocation.py '
                 + drone_ip + ' '
                 + new_coordinates['latitude'] + ' '
                 + new_coordinates['longitude'] + ' '
-                + new_coordinates['heigth'])
+                + new_coordinates['heigth'], shell=True, stdout=subprocess.PIPE)
+        logging.debug(result)
 
 @api.route('/locations', methods=['GET', 'POST'])
 def handle_locations():
@@ -49,8 +54,18 @@ def handle_locations():
         df.to_csv('/data/locations.csv')
         with open('/data/locations.json', 'wb') as f:
             json.dump(locations, codecs.getwriter('utf-8')(f), ensure_ascii=False)
-        propagate_message(request.get_json())
         return json.dumps(locations)
+    return json.dumps(locations)
+
+@api.route('/propagate', methods=['POST'])
+def propagate_locations():
+    locations.append(request.get_json())
+    print (locations)
+    df = pd.read_json(json.dumps(locations))
+    df.to_csv('/data/locations.csv')
+    with open('/data/locations.json', 'wb') as f:
+        json.dump(locations, codecs.getwriter('utf-8')(f), ensure_ascii=False)
+    propagate_message(request.get_json())
     return json.dumps(locations)
 
 if __name__ == '__main__':
