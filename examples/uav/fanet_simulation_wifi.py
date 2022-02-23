@@ -193,7 +193,7 @@ def topology():
     info("\n*** Scenario 1: BS1 sends initial coordinates to Drone 5\n")
     set_location(bs1, iterations=10, interval=2, target='10.0.0.253', coordinates='11 11 11')
     
-    info("\n*** Scenario 2: BS1 changes the destination coordinates through Drone 2")
+    info("\n*** Scenario 2: BS1 changes the destination coordinates through Drone 2\n")
     set_location(bs1, iterations=10, interval=2, target='10.0.0.250', coordinates='22 22 22')
 
     info('\n*** Running CLI\n')
