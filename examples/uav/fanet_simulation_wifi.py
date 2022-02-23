@@ -3,7 +3,9 @@
 This is the most simple example to showcase Containernet.
 """
 
+import subprocess
 import os
+from sys import stdout
 import time
 from mininet.cli import CLI
 from mn_wifi.link import adhoc
@@ -17,6 +19,9 @@ def topology():
     setLogLevel('info')
 
     net = Containernet()
+
+    info('*** Starting monitors')
+    grafana = subprocess.Popen(["sh", "start_monitor.sh"], stdout=subprocess.PIPE)
 
     info('*** Adding base station\n')
     bs1 = net.addStation('base1', 
@@ -161,11 +166,13 @@ def topology():
     d5.cmd('python /rest/locationRestServer.py &')
 
     info('*** Start drone terminals')
-    makeTerm(d1, cmd="bash")
-    makeTerm(d2, cmd="bash")
-    makeTerm(d3, cmd="bash")
-    makeTerm(d4, cmd="bash")
-    makeTerm(d5, cmd="bash")
+    makeTerm(bs1, cmd="bash")
+    makeTerm(d1, cmd="tail -f /data/locations.csv")
+    makeTerm(d2, cmd="tail -f /data/locations.csv")
+    makeTerm(d3, cmd="tail -f /data/locations.csv")
+    makeTerm(d4, cmd="tail -f /data/locations.csv")
+    makeTerm(d5, cmd="tail -f /data/locations.csv")
+
 
     # info("*** Starting CoppeliaSim\n")
     path = os.path.dirname(os.path.abspath(__file__))
@@ -183,12 +190,20 @@ def topology():
     #setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
     #os.system(setNodePosition)
 
+    info("*** Propagating coordinates")
+    total = 10
+    for number in range(total):
+        bs1.cmd('python /rest/setLocation.py 10.0.0.253 10 10 10 True &')
+        time.sleep(10)
+        print("Iteration number " + str(number) + " of " + str(total))
+
     info('*** Running CLI\n')
     CLI(net)
 
     info('*** Stopping network')
     kill_process()
     net.stop()
+    grafana.kill()
 
 def kill_process():
     #os.system('pkill -9 -f coppeliaSim')
