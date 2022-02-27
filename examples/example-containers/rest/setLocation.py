@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import codecs
 import logging
 import requests, sys, json, time
 
@@ -21,6 +22,8 @@ def post_data(address, lat, longi, hei, propagate=0):
     logging.info(payload)
     logging.info(headers)
     logging.info(result)
+    with open('/tmp/currentDestination.json', 'wb') as f:
+        json.dump(payload, codecs.getwriter('utf-8')(f), ensure_ascii=False)
 
 if __name__ == '__main__':
     if len(sys.argv) != 5 and len(sys.argv) != 6:
