@@ -2,8 +2,7 @@
 import subprocess , requests, logging, codecs, time, socket
 import pandas as pd
 from crypt import methods
-from flask import Flask, json, request
-from numpy import empty
+from flask import Flask, json, request, Response
 
 logging.basicConfig(filename="/data/locationRestServer.log",
                     filemode='a',
@@ -11,7 +10,7 @@ logging.basicConfig(filename="/data/locationRestServer.log",
                     level=logging.DEBUG)
 
 locations = [{"latitude": 0, "longitude": 0, "heigth": 0, 'timestamp': time.time()}]
-baseStationURL = 'http://10.0.0.1/validate'
+baseStationURL = 'http://10.0.0.1:5000/validate'
 
 api = Flask(__name__)
 api.config['DEBUG'] = True
@@ -62,11 +61,16 @@ def handle_locations():
 
 @api.route('/propagate', methods=['POST'])
 def propagate_locations():
+    logging.info('Retrieving destination coordinates from base station')
     currentLocation = requests.get(baseStationURL)
+    logging.info(currentLocation)
+    logging.info('Base station response: ' + str(currentLocation.content))
+    logging.info('New coordintates paylod' + str(request.get_json()))
+    logging.info(currentLocation.status_code)
     if currentLocation.status_code == 200 and currentLocation.json != request.get_json():
         error = 'Propagation of coordinates does not match with the base station information. Validation failed'
         logging.warning(error)
-        return json.dumps('[message: ${error}')
+        return error, 500
     locations.append(request.get_json())
     print (locations)
     df = pd.read_json(json.dumps(locations))
@@ -78,8 +82,7 @@ def propagate_locations():
 
 @api.route('/validate', methods=['GET'])
 def validate_locations():
-    with open('/tmp/currentDestination.json', 'r') as f:
-        return json.dumps(f.read)
+    return json.dumps(json.load(open('/tmp/currentDestination.json')))
 
 if __name__ == '__main__':
     api.run(host='0.0.0.0')
