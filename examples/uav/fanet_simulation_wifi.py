@@ -30,7 +30,7 @@ def topology():
                         cls=DockerSta,
                         dimage="containernet_example:sawtoothAll",
                         ports=[4004,8008,8800,5050,3030,5000],
-                        volumes=["/tmp/base1:/root"])
+                        volumes=["/tmp/base1/data:/data"])
 
     info('\n*** Adding docker drones\n')
 
@@ -107,8 +107,7 @@ def topology():
     net.setPropagationModel(model="logDistance", exp=4.5)
 
     info("\n*** Configuring wifi nodes\n")
-    ap1 = net.addAccessPoint('ap1')
-    c0 = net.addController('c0')
+
     net.configureWifiNodes()
 
     net.addLink(bs1, cls=adhoc, intf='base1-wlan0',
@@ -142,7 +141,6 @@ def topology():
     info('\n*** Starting network\n')
     net.build()
     net.start()
-    # ap1.start([c0])
 
     #nodes = net.stations
     #telemetry(nodes=nodes, single=True, data_type='position')
@@ -164,6 +162,9 @@ def topology():
     d3.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
     d4.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
     d5.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
+
+    info('\n*** Starting Validation REST server on base station\n')
+    bs1.cmd('python /rest/locationRestServer.py &')
 
     info('\n*** Start drone terminals\n')
     makeTerm(bs1, cmd="bash")
@@ -191,10 +192,32 @@ def topology():
     #os.system(setNodePosition)
 
     info("\n*** Scenario 1: BS1 sends initial coordinates to Drone 5\n")
-    set_location(bs1, iterations=10, interval=2, target='10.0.0.253', coordinates='11 11 11')
+    set_location(bs1, iterations=3, interval=7, target='10.0.0.253', coordinates='11 11 11')
     
     info("\n*** Scenario 2: BS1 changes the destination coordinates through Drone 2\n")
-    set_location(bs1, iterations=10, interval=2, target='10.0.0.250', coordinates='22 22 22')
+    set_location(bs1, iterations=3, interval=7, target='10.0.0.250', coordinates='22 22 22')
+
+    info("\n*** Scenario 3: Drone 4 is compromised and  tries to change the destination coordinates\n")
+    set_location(d4, iterations=3, interval=7, target='10.0.0.249', coordinates='33 33 33')
+
+    info("\n*** Scenario 4: Connection with the base station is lost and \
+the compromised drone tries to change the destination coordinates\n")
+    bs1.cmd("pkill -9 -f /rest/locationRestServer.py &")
+    set_location(d4, iterations=3, interval=7, target='10.0.0.250', coordinates='44 44 44')
+
+    info("\n*** Scenario 5: A compromised base station joins the network tries to change the destination coordinates\n")
+    bs2 = net.addStation('base2', 
+                    ip='10.0.0.101',
+                    mac='00:00:00:00:00:00',
+                    cls=DockerSta,
+                    dimage="containernet_example:sawtoothAll",
+                    ports=[4004,8008,8800,5050,3030,5000],
+                    volumes=["/tmp/base2:/root"])
+    net.addLink(bs2, cls=adhoc, intf='base2-wlan0',
+            ssid='adhocNet', proto='batman_adv',
+            mode='g', channel=5, ht_cap='HT40+')
+    makeTerm(bs1, cmd="bash")
+    set_location(bs2, iterations=3, interval=7, target='10.0.0.251', coordinates='55 55 55')
 
     info('\n*** Running CLI\n')
     CLI(net)
