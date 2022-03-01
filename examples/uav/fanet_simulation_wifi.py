@@ -23,7 +23,7 @@ def topology():
     info('*** Starting monitors')
     grafana = subprocess.Popen(["sh", "start_monitor.sh"], stdout=subprocess.PIPE)
 
-    info('*** Adding base station\n')
+    info('\n*** Adding base station\n')
     bs1 = net.addStation('base1', 
                         ip='10.0.0.1',
                         mac='00:00:00:00:00:00',
@@ -32,7 +32,7 @@ def topology():
                         ports=[4004,8008,8800,5050,3030,5000],
                         volumes=["/tmp/base1:/root"])
 
-    info('*** Adding docker drones\n')
+    info('\n*** Adding docker drones\n')
 
     # Intel Aero Ready to Fly Drone processor
     d1 = net.addStation('drone1', 
@@ -106,7 +106,7 @@ def topology():
 
     net.setPropagationModel(model="logDistance", exp=4.5)
 
-    info("*** Configuring wifi nodes\n")
+    info("\n*** Configuring wifi nodes\n")
     ap1 = net.addAccessPoint('ap1')
     c0 = net.addController('c0')
     net.configureWifiNodes()
@@ -139,7 +139,7 @@ def topology():
                 ssid='adhocNet', proto='batman_adv',
                 mode='g', channel=5, ht_cap='HT40+')
 
-    info('*** Starting network\n')
+    info('\n*** Starting network\n')
     net.build()
     net.start()
     # ap1.start([c0])
@@ -155,17 +155,17 @@ def topology():
     # # set_socket_ip: localhost must be replaced by ip address
     # # of the network interface of your system
     # # The same must be done with socket_client.py
-    info("*** Starting Socket Server\n")
+    info('\n*** Starting Socket Server\n')
     net.socketServer(ip='127.0.0.1', port=12345)
 
-    info('*** Starting REST server on drones\n')
-    d1.cmd('python /rest/locationRestServer.py &')
-    d2.cmd('python /rest/locationRestServer.py &')
-    d3.cmd('python /rest/locationRestServer.py &')
-    d4.cmd('python /rest/locationRestServer.py &')
-    d5.cmd('python /rest/locationRestServer.py &')
+    info('\n*** Starting REST server on drones\n')
+    d1.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
+    d2.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
+    d3.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
+    d4.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
+    d5.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
 
-    info('*** Start drone terminals')
+    info('\n*** Start drone terminals\n')
     makeTerm(bs1, cmd="bash")
     makeTerm(d1, cmd="tail -f /data/locations.csv")
     makeTerm(d2, cmd="tail -f /data/locations.csv")
@@ -180,30 +180,37 @@ def topology():
     #             '/simulation.ttt -gGUIITEMS_2 &'.format(path, path))
     # time.sleep(10)
 
-    info("*** Perform a simple test\n")
+    info("\n*** Perform a simple test\n")
     simpleTest = 'python {}/simpleTest.py '.format(path) + sta_drone_send + ' &'
     os.system(simpleTest)
 
     time.sleep(5)
 
-    info("*** Configure the node position\n")
+    info("\n*** Configure the node position\n")
     #setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
     #os.system(setNodePosition)
 
-    info("*** Propagating coordinates")
-    total = 10
-    for number in range(total):
-        bs1.cmd('python /rest/setLocation.py 10.0.0.253 10 10 10 True &')
-        time.sleep(10)
-        print("Iteration number " + str(number) + " of " + str(total))
+    info("\n*** Scenario 1: BS1 sends initial coordinates to Drone 5\n")
+    set_location(bs1, iterations=10, interval=2, target='10.0.0.253', coordinates='11 11 11')
+    
+    info("\n*** Scenario 2: BS1 changes the destination coordinates through Drone 2\n")
+    set_location(bs1, iterations=10, interval=2, target='10.0.0.250', coordinates='22 22 22')
 
-    info('*** Running CLI\n')
+    info('\n*** Running CLI\n')
     CLI(net)
 
-    info('*** Stopping network')
+    info('\n*** Stopping network')
     kill_process()
     net.stop()
     grafana.kill()
+
+def set_location(station, iterations=10, interval=10, target ='10.0.0.249', coordinates='0 0 0'):
+    for number in range(iterations):
+        station.cmd('python /rest/setLocation.py ' 
+                    + target + ' ' 
+                    + coordinates + ' True &')
+        time.sleep(interval)
+        print("Iteration number " + str(number + 1) + " of " + str(iterations))
 
 def kill_process():
     #os.system('pkill -9 -f coppeliaSim')
