@@ -7,12 +7,15 @@ RUN apt-get update && apt-get install -y \
     netcat \
     iperf \
     sawtooth \
+    sawtooth-pbft-engine \
     python-pip \
     iw
 
 RUN pip install --upgrade pip==19.3.1
 RUN pip install flask && pip install requests
 RUN pip install pandas
+RUN apt install sudo
+RUN apt-get install sawtooth-pbft-engine
 RUN mkdir /data
 
 COPY rest/* /rest/
