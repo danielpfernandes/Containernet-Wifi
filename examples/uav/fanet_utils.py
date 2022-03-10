@@ -1,3 +1,4 @@
+from distutils.log import error
 import os
 import time
 
@@ -37,20 +38,30 @@ def start_validator(node: any, should_open_terminal: bool = False):
         node (any): Mininet node
         should_open_terminal (bool, optional): If True, opens a new terminal. Defaults to False.
     """
-    ip = str(node.params.get('ip'))
-    peers = ["10.0.0.1", "10.0.0.249", "10.0.0.250",
-             "10.0.0.251", "10.0.0.252", "10.0.0.253"]
-    peers.remove(ip)
-    command = 'sudo -u sawtooth sawtooth-validator \
-        --bind component:tcp://127.0.0.1:4004 \
-        --bind network:tcp://' + ip + ':8800 \
-        --bind consensus:tcp://' + ip + ':5050 \
-        --endpoint tcp://' + ip + ':8800 \
-        --peers tcp://' + peers[0] + ':8800, tcp://' + peers[1] + ':8800, tcp://' + peers[2] + ':8800, tcp://' + peers[3] + ':8800, tcp://' + peers[4] + ':8800'
+    station_name = str(node.name)
+    if station_name is 'base1': number = "0"
+    elif station_name is 'drone1': number = "1"
+    elif station_name is 'drone2': number = "2"
+    elif station_name is 'drone3': number = "3"
+    elif station_name is 'drone4': number = "4"
+    else: error('Station not found', exit())
+    command = 'bash /sawtooth_scripts/validator_' + number + '.sh'
+    # ip = str(node.params.get('ip'))
+    # peers = ["10.0.0.1", "10.0.0.249", "10.0.0.250",
+    #          "10.0.0.251", "10.0.0.252", "10.0.0.253"]
+    # peers.remove(ip)
+    # command = 'sudo -u sawtooth sawtooth-validator \
+    #     --bind component:tcp://127.0.0.1:4004 \
+    #     --bind network:tcp://' + ip + ':8800 \
+    #     --bind consensus:tcp://' + ip + ':5050 \
+    #     --endpoint tcp://' + ip + ':8800 \
+    #     --peers tcp://' + peers[0] + ':8800, tcp://' + peers[1] + ':8800, tcp://' + peers[2] + ':8800, tcp://' + peers[3] + ':8800, tcp://' + peers[4] + ':8800'
     if should_open_terminal:
-        makeTerm(node=node, title=str(node.name) + ' Validator', cmd=command)
+        makeTerm(node=node, title=station_name + ' Validator', cmd=command)
+        time.sleep(10)
     else:
         node.cmd(command + ' &')
+        time.sleep(3)
 
 
 def start_rest_api(node: any, should_open_terminal: bool = False):
@@ -60,7 +71,7 @@ def start_rest_api(node: any, should_open_terminal: bool = False):
         node (any): Mininet node
         should_open_terminal (bool, optional): If True, opens a new terminal. Defaults to False.
     """
-    command = 'sudo -u sawtooth sawtooth-rest-api -v'
+    command = 'sudo -u sawtooth sawtooth-rest-api -v --connect 127.0.0.1:4004'
     if should_open_terminal:
         makeTerm(node=node, title=str(node.name) + ' REST API', cmd=command)
     else:
@@ -130,6 +141,7 @@ def create_batch_settings(node, public_key: dict):
     -o /tmp/config-consensus.batch \
     sawtooth.consensus.algorithm.name=pbft \
     sawtooth.consensus.algorithm.version=1.0 \
+    sawtooth.publisher.max_batches_per_block=1200 \
     sawtooth.consensus.pbft.members=" + pbft_members)
 
 

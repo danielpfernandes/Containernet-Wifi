@@ -17,9 +17,10 @@ RUN pip install pandas
 RUN apt install sudo
 RUN apt-get install sawtooth-pbft-engine
 RUN mkdir /data
-
+RUN mkdir /pbft-shared
 COPY rest/* /rest/
+COPY sawtooth_scripts/* /sawtooth_scripts/
 
-ENV PATH="/rest:${PATH}"
+ENV PATH="/sawtooth_scripts:/rest:${PATH}"
 
 CMD /bin/bash

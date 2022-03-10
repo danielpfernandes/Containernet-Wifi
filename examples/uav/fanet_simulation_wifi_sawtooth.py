@@ -36,7 +36,8 @@ def topology():
                          cls=DockerSta,
                          dimage=DOCKER_IMAGE,
                          ports=PORTS,
-                         volumes=["/tmp/base1/data:/data"])
+                         volumes=["/tmp/base1/data:/data",
+                                  "/tmp/pbft-shared:/pbft-shared"])
 
     info('\n*** Adding docker drones\n')
 
@@ -48,7 +49,8 @@ def topology():
                         dimage=DOCKER_IMAGE,
                         ports=PORTS,
                         volumes=["/tmp/drone1/root:/root",
-                                 "/tmp/drone1/data:/data"],
+                                 "/tmp/drone1/data:/data",
+                                 "/tmp/pbft-shared:/pbft-shared"],
                         mem_limit=3900182016,
                         cpu_shares=5,
                         cpu_period=50000,
@@ -63,7 +65,8 @@ def topology():
                         dimage=DOCKER_IMAGE,
                         ports=PORTS,
                         volumes=["/tmp/drone2/root:/root",
-                                 "/tmp/drone2/data:/data"],
+                                 "/tmp/drone2/data:/data",
+                                 "/tmp/pbft-shared:/pbft-shared"],
                         mem_limit=958182016,
                         cpu_shares=2,
                         cpu_period=50000,
@@ -78,7 +81,8 @@ def topology():
                         dimage=DOCKER_IMAGE,
                         ports=PORTS,
                         volumes=["/tmp/drone3/root:/root",
-                                 "/tmp/drone3/data:/data"],
+                                 "/tmp/drone3/data:/data",
+                                 "/tmp/pbft-shared:/pbft-shared"],
                         mem_limit=3900182016,
                         cpu_shares=5,
                         cpu_period=50000,
@@ -93,7 +97,8 @@ def topology():
                         dimage=DOCKER_IMAGE,
                         ports=PORTS,
                         volumes=["/tmp/drone4/root:/root",
-                                 "/tmp/drone4/data:/data"],
+                                 "/tmp/drone4/data:/data",
+                                 "/tmp/pbft-shared:/pbft-shared"],
                         mem_limit=1900182016,
                         cpu_shares=5,
                         cpu_period=50000,
@@ -108,7 +113,8 @@ def topology():
                         dimage=DOCKER_IMAGE,
                         ports=PORTS,
                         volumes=["/tmp/drone5/root:/root",
-                                 "/tmp/drone5/data:/data"],
+                                 "/tmp/drone5/data:/data",
+                                 "/tmp/pbft-shared:/pbft-shared"],
                         mem_limit=3900182016,
                         cpu_shares=10,
                         cpu_period=50000,
@@ -167,36 +173,36 @@ def topology():
     info('\n*** Starting Socket Server\n')
     net.socketServer(ip='127.0.0.1', port=12345)
 
-    info('\n*** Generating drones and base station sawtooth keypairs\n')
-    validator_pub_key = {}
-    validator_pub_key["d1"] = generate_keypairs(d1)
-    validator_pub_key["d2"] = generate_keypairs(d2)
-    validator_pub_key["d3"] = generate_keypairs(d3)
-    validator_pub_key["d4"] = generate_keypairs(d4)
-    validator_pub_key["d5"] = generate_keypairs(d5)
-    validator_pub_key["bs1"] = generate_keypairs(bs1)
+    # info('\n*** Generating drones and base station sawtooth keypairs\n')
+    # validator_pub_key = {}
+    # validator_pub_key["d1"] = generate_keypairs(d1)
+    # validator_pub_key["d2"] = generate_keypairs(d2)
+    # validator_pub_key["d3"] = generate_keypairs(d3)
+    # validator_pub_key["d4"] = generate_keypairs(d4)
+    # validator_pub_key["d5"] = generate_keypairs(d5)
+    # validator_pub_key["bs1"] = generate_keypairs(bs1)
 
-    info('\n*** Create the Genesis Block on Base Station\n')
-    bs1.cmd(
-        "sawset genesis --key $HOME/.sawtooth/keys/root.priv -o /tmp/config-genesis.batch")
+    # info('\n*** Create the Genesis Block on Base Station\n')
+    # bs1.cmd(
+    #     "sawset genesis --key $HOME/.sawtooth/keys/root.priv -o /tmp/config-genesis.batch")
 
-    info('\n*** Create a batch to initialize the consensus settings on the Base Station\n')
-    create_batch_settings(bs1, validator_pub_key)
+    # info('\n*** Create a batch to initialize the consensus settings on the Base Station\n')
+    # create_batch_settings(bs1, validator_pub_key)
 
-    info('\n*** Combining batches in one genesis bath on Base Station ***\n')
-    bs1.cmd('sudo -u sawtooth sawadm genesis /tmp/config-genesis.batch /tmp/config-consensus.batch')
+    # info('\n*** Combining batches in one genesis bath on Base Station ***\n')
+    # bs1.cmd('sudo -u sawtooth sawadm genesis /tmp/config-genesis.batch /tmp/config-consensus.batch')
 
     info('\n*** Starting Sawtooth on the Base Station ***\n')
     initialize_sawtooth(bs1, should_open_terminal=True)
 
     info('\n*** Starting Sawtooth on the Drones ***\n')
     initialize_sawtooth(d1, should_open_terminal=True)
-    initialize_sawtooth(d2)
+    initialize_sawtooth(d2, should_open_terminal=True)
     initialize_sawtooth(d3)
     initialize_sawtooth(d4)
-    initialize_sawtooth(d5)
+    #initialize_sawtooth(d5)
 
-    info('\n*** Start drone terminals\n')
+    # info('\n*** Start drone terminals\n')
     makeTerm(bs1, cmd="bash")
     makeTerm(d1, cmd="bash")
     # makeTerm(d2, cmd="bash")
