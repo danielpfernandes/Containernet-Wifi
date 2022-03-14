@@ -61,7 +61,7 @@ def start_validator(node: any, should_open_terminal: bool = False):
         time.sleep(10)
     else:
         node.cmd(command + ' &')
-        time.sleep(3)
+        time.sleep(2)
 
 
 def start_rest_api(node: any, should_open_terminal: bool = False):

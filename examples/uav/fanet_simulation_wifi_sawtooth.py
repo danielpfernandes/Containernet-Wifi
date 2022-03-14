@@ -14,7 +14,7 @@ from mininet.log import info, setLogLevel
 from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.term import makeTerm
-from fanet_utils import create_batch_settings, generate_keypairs, initialize_sawtooth, kill_process
+from fanet_utils import initialize_sawtooth, kill_process
 
 
 def topology():

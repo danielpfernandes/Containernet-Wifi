@@ -15,14 +15,14 @@ if [ ! -e /root/.sawtooth/keys/root.priv ]; then
 fi &&
 sawtooth-validator -vv \
     --endpoint tcp://10.0.0.249:8800 \
-    --bind component:tcp://127.0.01:4004 \
-    --bind consensus:tcp://eth0:5050 \
-    --bind network:tcp://10.0.0.249:8800 \
-    --scheduler parallel \
-    --peering static \
-    --maximum-peer-connectivity 10000 \
-    --peers tcp://10.0.0.1:8800, \
-            tcp://10.0.0.249:8800, \
-            tcp://10.0.0.250:8800, \
-            tcp://10.0.0.251:8800, \
+#    --bind component:tcp://127.0.0.1:4004 \
+#    --bind consensus:tcp://127.0.0.1:5050 \
+#    --bind network:tcp://127.0.0.1:8800 \
+#    --scheduler parallel \
+#    --peering static \
+#    --maximum-peer-connectivity 10000 \
+    --peers tcp://10.0.0.1:8800,\
+            tcp://10.0.0.249:8800,\
+            tcp://10.0.0.250:8800,\
+            tcp://10.0.0.251:8800,\
             tcp://10.0.0.252:8800

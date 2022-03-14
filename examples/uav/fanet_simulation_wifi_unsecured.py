@@ -228,7 +228,7 @@ the compromised drone tries to change the destination coordinates\n")
     net.addLink(bs2, cls=adhoc, intf='base2-wlan0',
                 ssid='adhocNet', proto='batman_adv',
                 mode='g', channel=5, ht_cap='HT40+')
-    makeTerm(bs1, cmd="bash")
+    makeTerm(bs2, cmd="bash")
     set_location(bs2, iterations=3, interval=7,
                  target='10.0.0.251', coordinates='55 55 55')
 

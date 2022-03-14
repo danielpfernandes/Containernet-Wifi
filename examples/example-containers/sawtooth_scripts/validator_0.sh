@@ -11,39 +11,38 @@ if [ ! -e /etc/sawtooth/keys/validator.priv ]; then
     cp /etc/sawtooth/keys/validator.priv /pbft-shared/validators/validator-0.priv
 fi &&
 if [ ! -e config-genesis.batch ]; then
-    sawset genesis -k /etc/sawtooth/keys/validator.priv -o config-genesis.batch
+    sawset genesis -k /etc/sawtooth/keys/validator.priv -o /tmp/config-genesis.batch
 fi &&
 while [[ ! -f /pbft-shared/validators/validator-1.pub || \
             ! -f /pbft-shared/validators/validator-2.pub || \
             ! -f /pbft-shared/validators/validator-3.pub || \
             ! -f /pbft-shared/validators/validator-4.pub ]];
 do sleep 1; done
-echo 'sawtooth.consensus.pbft.members=\\['\"'$$(cat /pbft-shared/validators/validator-0.pub)'\"','\"'$$(cat /pbft-shared/validators/validator-1.pub)'\"','\"'$$(cat /pbft-shared/validators/validator-2.pub)'\"','\"'$$(cat /pbft-shared/validators/validator-3.pub)'\"','\"'$$(cat /pbft-shared/validators/validator-4.pub)'\"'\\] &&'
-if [ ! -e config.batch ]; then
-    bash -c 'sawset proposal create \
+PBFT_MEMBERS=$(echo \'['"'$(cat /pbft-shared/validators/validator-0.pub)'"','"'$(cat /pbft-shared/validators/validator-1.pub)'"','"'$(cat /pbft-shared/validators/validator-2.pub)'"','"'$(cat /pbft-shared/validators/validator-3.pub)'"','"'$(cat /pbft-shared/validators/validator-4.pub)'"']\')
+if [ ! -e /tmp/config.batch ]; then
+    sawset proposal create \
     -k /etc/sawtooth/keys/validator.priv \
     sawtooth.consensus.algorithm.name=pbft \
     sawtooth.consensus.algorithm.version=1.0 \
-    sawtooth.consensus.pbft.members=\\['\"'$$(cat /pbft-shared/validators/validator-0.pub)'\"','\"'$$(cat /pbft-shared/validators/validator-1.pub)'\"','\"'$$(cat /pbft-shared/validators/validator-2.pub)'\"','\"'$$(cat /pbft-shared/validators/validator-3.pub)'\"','\"'$$(cat /pbft-shared/validators/validator-4.pub)'\"'\\] \
-    sawtooth.publisher.max_batches_per_block=1200 \
-    -o config.batch'
+    sawtooth.consensus.pbft.members=${PBFT_MEMBERS} \
+    -o /tmp/config.batch
 fi &&
 if [ ! -e /var/lib/sawtooth/genesis.batch ]; then
-    sawadm genesis config-genesis.batch config.batch
+    sawadm genesis /tmp/config-genesis.batch /tmp/config.batch
 fi &&
 if [ ! -e /root/.sawtooth/keys/root.priv ]; then
     sawtooth keygen root
 fi &&
 sawtooth-validator -vv \
     --endpoint tcp://10.0.0.1:8800 \
-    --bind component:tcp://127.0.0.1:4004 \
-    --bind consensus:tcp://eth0:5050 \
-    --bind network:tcp://10.0.0.1:8800 \
-    --scheduler parallel \
-    --peering static \
-    --maximum-peer-connectivity 10000 \
-    --peers tcp://10.0.0.1:8800, \
-            tcp://10.0.0.249:8800, \
-            tcp://10.0.0.250:8800, \
-            tcp://10.0.0.251:8800, \
+#    --bind component:tcp://127.0.0.1:4004 \
+#    --bind consensus:tcp://127.0.0.1:5050 \
+#    --bind network:tcp://127.0.0.1:8800 \
+#    --scheduler parallel \
+#    --peering static \
+#    --maximum-peer-connectivity 10000 \
+    --peers tcp://10.0.0.1:8800,\
+            tcp://10.0.0.249:8800,\
+            tcp://10.0.0.250:8800,\
+            tcp://10.0.0.251:8800,\
             tcp://10.0.0.252:8800
