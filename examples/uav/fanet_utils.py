@@ -24,28 +24,23 @@ def set_location(
         print("Iteration number " + str(number + 1) + " of " + str(iterations))
 
 
-def initialize_sawtooth(node: any, should_open_terminal=False):
-    start_validator(node, should_open_terminal)
+def initialize_sawtooth(node: any, should_open_terminal=False, wait_time_in_seconds: int = 2):
+    start_validator(node, should_open_terminal, wait_time_in_seconds)
     start_rest_api(node, should_open_terminal)
     start_transaction_processors(node, should_open_terminal)
     start_consensus_mecanism(node, should_open_terminal)
 
 
-def start_validator(node: any, should_open_terminal: bool = False):
+def start_validator(node: any, should_open_terminal: bool = False, wait_time_in_seconds: int = 2):
     """Start the Validator
 
     Args:
         node (any): Mininet node
         should_open_terminal (bool, optional): If True, opens a new terminal. Defaults to False.
+        wait_time_in_seconds (int, optional): Wait time in seconds before leaving the command
     """
     station_name = str(node.name)
-    if station_name is 'base1': number = "0"
-    elif station_name is 'drone1': number = "1"
-    elif station_name is 'drone2': number = "2"
-    elif station_name is 'drone3': number = "3"
-    elif station_name is 'drone4': number = "4"
-    else: error('Station not found', exit())
-    command = 'bash /sawtooth_scripts/validator_' + number + '.sh'
+    command = 'bash /sawtooth_scripts/validator.sh ' + station_name
     # ip = str(node.params.get('ip'))
     # peers = ["10.0.0.1", "10.0.0.249", "10.0.0.250",
     #          "10.0.0.251", "10.0.0.252", "10.0.0.253"]
@@ -58,10 +53,10 @@ def start_validator(node: any, should_open_terminal: bool = False):
     #     --peers tcp://' + peers[0] + ':8800, tcp://' + peers[1] + ':8800, tcp://' + peers[2] + ':8800, tcp://' + peers[3] + ':8800, tcp://' + peers[4] + ':8800'
     if should_open_terminal:
         makeTerm(node=node, title=station_name + ' Validator', cmd=command)
-        time.sleep(10)
+        time.sleep(wait_time_in_seconds)
     else:
         node.cmd(command + ' &')
-        time.sleep(2)
+        time.sleep(wait_time_in_seconds)
 
 
 def start_rest_api(node: any, should_open_terminal: bool = False):

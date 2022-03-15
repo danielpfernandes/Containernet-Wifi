@@ -193,10 +193,10 @@ def topology():
     # bs1.cmd('sudo -u sawtooth sawadm genesis /tmp/config-genesis.batch /tmp/config-consensus.batch')
 
     info('\n*** Starting Sawtooth on the Base Station ***\n')
-    initialize_sawtooth(bs1, should_open_terminal=True)
+    initialize_sawtooth(bs1, should_open_terminal=True, wait_time_in_seconds=10)
 
     info('\n*** Starting Sawtooth on the Drones ***\n')
-    initialize_sawtooth(d1, should_open_terminal=True)
+    initialize_sawtooth(d1, should_open_terminal=True, wait_time_in_seconds=10)
     initialize_sawtooth(d2, should_open_terminal=True)
     initialize_sawtooth(d3)
     initialize_sawtooth(d4)

@@ -21,6 +21,8 @@ RUN mkdir /data
 RUN mkdir /pbft-shared
 COPY rest/* /rest/
 COPY sawtooth_scripts/* /sawtooth_scripts/
+COPY sawtooth_scripts/bashrc_template /root/.bash_aliases
+RUN chmod +x /sawtooth_scripts/*
 
 ENV PATH="/sawtooth_scripts:/rest:${PATH}"
 
