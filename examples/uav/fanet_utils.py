@@ -1,4 +1,5 @@
 from distutils.log import error
+from mininet.log import info
 import os
 import time
 
@@ -41,16 +42,14 @@ def start_validator(node: any, should_open_terminal: bool = False, wait_time_in_
     """
     station_name = str(node.name)
     command = 'bash /sawtooth_scripts/validator.sh ' + station_name
-    # ip = str(node.params.get('ip'))
-    # peers = ["10.0.0.1", "10.0.0.249", "10.0.0.250",
-    #          "10.0.0.251", "10.0.0.252", "10.0.0.253"]
-    # peers.remove(ip)
-    # command = 'sudo -u sawtooth sawtooth-validator \
-    #     --bind component:tcp://127.0.0.1:4004 \
-    #     --bind network:tcp://' + ip + ':8800 \
-    #     --bind consensus:tcp://' + ip + ':5050 \
-    #     --endpoint tcp://' + ip + ':8800 \
-    #     --peers tcp://' + peers[0] + ':8800, tcp://' + peers[1] + ':8800, tcp://' + peers[2] + ':8800, tcp://' + peers[3] + ':8800, tcp://' + peers[4] + ':8800'
+    
+    info('\n*** Generating sawtooth keypairs for ' + station_name + ' ***\n')
+    
+    if station_name is 'base1':
+        info('\n*** Create the Genesis Block on Base Station\n')
+        info('\n*** Create a batch to initialize the consensus settings on the Base Station\n')
+        info('\n*** Combining batches in one genesis bath on Base Station ***\n')
+    
     if should_open_terminal:
         makeTerm(node=node, title=station_name + ' Validator', cmd=command)
         time.sleep(wait_time_in_seconds)
@@ -66,29 +65,39 @@ def start_rest_api(node: any, should_open_terminal: bool = False):
         node (any): Mininet node
         should_open_terminal (bool, optional): If True, opens a new terminal. Defaults to False.
     """
+    station_name = str(node.name)
     command = 'sudo -u sawtooth sawtooth-rest-api -v --connect 127.0.0.1:4004'
+    
+    info('\n*** Start REST API for ' + station_name + ' ***\n')
+    
     if should_open_terminal:
-        makeTerm(node=node, title=str(node.name) + ' REST API', cmd=command)
+        makeTerm(node=node, title=station_name + ' REST API', cmd=command)
     else:
         node.cmd(command + ' &')
 
 
-def start_transaction_processors(node: any, should_open_terminal: bool = False):
+def start_transaction_processors(node: any, should_open_terminal: bool = False, wait_time_in_seconds: int = 5):
     """Start the transacion processors
 
     Args:
         node (any): Mininet node
         should_open_terminal (bool, optional): If True, opens a new terminal for each processor. Defaults to False.
     """
+    station_name = str(node.name)
     command_transaction = 'sudo -u sawtooth settings-tp -v'
     command_processor = 'sudo -u sawtooth intkey-tp-python -v'
+    
+    info('\n*** Start Transaction Processors for ' + station_name + ' ***\n')
+    
     if should_open_terminal:
-        makeTerm(node=node, title=str(node.name) +
+        makeTerm(node=node, title=station_name +
                  ' Transaction Settings', cmd=command_transaction)
-        makeTerm(node=node, title=str(node.name) +
+        time.sleep(wait_time_in_seconds)
+        makeTerm(node=node, title=station_name +
                  ' Intkey Processor', cmd=command_processor)
     else:
         node.cmd(command_transaction + ' &')
+        time.sleep(wait_time_in_seconds)
         node.cmd(command_processor + ' &')
 
 
@@ -99,9 +108,13 @@ def start_consensus_mecanism(node: any, should_open_terminal: bool = False):
         node (any): Mininet node
         should_open_terminal (bool, optional): If True, opens a new terminal. Defaults to False.
     """
+    station_name = str(node.name)
     command = 'sudo -u sawtooth pbft-engine -vv --connect tcp://localhost:5050'
+    
+    info('\n*** Start Consensus Engine for ' + station_name + ' ***\n')
+    
     if should_open_terminal:
-        makeTerm(node=node, title=str(node.name) +
+        makeTerm(node=node, title=station_name +
                  ' Consensus Mecanism', cmd=command)
     else:
         node.cmd(command + ' &')

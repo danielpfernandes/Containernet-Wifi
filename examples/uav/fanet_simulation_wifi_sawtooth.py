@@ -173,25 +173,6 @@ def topology():
     info('\n*** Starting Socket Server\n')
     net.socketServer(ip='127.0.0.1', port=12345)
 
-    # info('\n*** Generating drones and base station sawtooth keypairs\n')
-    # validator_pub_key = {}
-    # validator_pub_key["d1"] = generate_keypairs(d1)
-    # validator_pub_key["d2"] = generate_keypairs(d2)
-    # validator_pub_key["d3"] = generate_keypairs(d3)
-    # validator_pub_key["d4"] = generate_keypairs(d4)
-    # validator_pub_key["d5"] = generate_keypairs(d5)
-    # validator_pub_key["bs1"] = generate_keypairs(bs1)
-
-    # info('\n*** Create the Genesis Block on Base Station\n')
-    # bs1.cmd(
-    #     "sawset genesis --key $HOME/.sawtooth/keys/root.priv -o /tmp/config-genesis.batch")
-
-    # info('\n*** Create a batch to initialize the consensus settings on the Base Station\n')
-    # create_batch_settings(bs1, validator_pub_key)
-
-    # info('\n*** Combining batches in one genesis bath on Base Station ***\n')
-    # bs1.cmd('sudo -u sawtooth sawadm genesis /tmp/config-genesis.batch /tmp/config-consensus.batch')
-
     info('\n*** Starting Sawtooth on the Base Station ***\n')
     initialize_sawtooth(bs1, should_open_terminal=True, wait_time_in_seconds=10)
 
@@ -205,10 +186,6 @@ def topology():
     # info('\n*** Start drone terminals\n')
     makeTerm(bs1, cmd="bash")
     makeTerm(d1, cmd="bash")
-    # makeTerm(d2, cmd="bash")
-    # makeTerm(d3, cmd="bash")
-    # makeTerm(d4, cmd="bash")
-    # makeTerm(d5, cmd="bash")
 
     # info("*** Starting CoppeliaSim\n")
     path = os.path.dirname(os.path.abspath(__file__))
