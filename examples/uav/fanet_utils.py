@@ -5,6 +5,7 @@ import time
 
 from containernet.term import makeTerm
 
+cmd_keep_alive = '; bash'
 
 def set_location(
         station: any, iterations=10, interval=10, target='10.0.0.249', coordinates='0 0 0'):
@@ -25,14 +26,14 @@ def set_location(
         print("Iteration number " + str(number + 1) + " of " + str(iterations))
 
 
-def initialize_sawtooth(node: any, should_open_terminal=False, wait_time_in_seconds: int = 2):
-    start_validator(node, should_open_terminal, wait_time_in_seconds)
-    start_rest_api(node, should_open_terminal)
-    start_transaction_processors(node, should_open_terminal)
-    start_consensus_mecanism(node, should_open_terminal)
+def initialize_sawtooth(node: any, should_open_terminal=False, wait_time_in_seconds: int = 2, keep_terminal_alive = False):
+    start_validator(node, should_open_terminal, wait_time_in_seconds, keep_terminal_alive)
+    start_rest_api(node, should_open_terminal, keep_terminal_alive)
+    start_transaction_processors(node, should_open_terminal, keep_terminal_alive)
+    start_consensus_mecanism(node, should_open_terminal, keep_terminal_alive)
 
 
-def start_validator(node: any, should_open_terminal: bool = False, wait_time_in_seconds: int = 2):
+def start_validator(node: any, should_open_terminal: bool = False, wait_time_in_seconds: int = 2, keep_terminal_alive = False):
     """Start the Validator
 
     Args:
@@ -51,6 +52,7 @@ def start_validator(node: any, should_open_terminal: bool = False, wait_time_in_
         info('\n*** Combining batches in one genesis bath on Base Station ***\n')
     
     if should_open_terminal:
+        if keep_terminal_alive: command += cmd_keep_alive
         makeTerm(node=node, title=station_name + ' Validator', cmd=command)
         time.sleep(wait_time_in_seconds)
     else:
@@ -58,7 +60,7 @@ def start_validator(node: any, should_open_terminal: bool = False, wait_time_in_
         time.sleep(wait_time_in_seconds)
 
 
-def start_rest_api(node: any, should_open_terminal: bool = False):
+def start_rest_api(node: any, should_open_terminal: bool = False, keep_terminal_alive = False):
     """Start the REST API
 
     Args:
@@ -71,12 +73,13 @@ def start_rest_api(node: any, should_open_terminal: bool = False):
     info('\n*** Start REST API for ' + station_name + ' ***\n')
     
     if should_open_terminal:
+        if keep_terminal_alive: command += cmd_keep_alive
         makeTerm(node=node, title=station_name + ' REST API', cmd=command)
     else:
         node.cmd(command + ' &')
 
 
-def start_transaction_processors(node: any, should_open_terminal: bool = False, wait_time_in_seconds: int = 5):
+def start_transaction_processors(node: any, should_open_terminal: bool = False, wait_time_in_seconds: int = 5, keep_terminal_alive = False):
     """Start the transacion processors
 
     Args:
@@ -90,6 +93,7 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
     info('\n*** Start Transaction Processors for ' + station_name + ' ***\n')
     
     if should_open_terminal:
+        if keep_terminal_alive: command += cmd_keep_alive
         makeTerm(node=node, title=station_name +
                  ' Transaction Settings', cmd=command_transaction)
         time.sleep(wait_time_in_seconds)
@@ -101,7 +105,7 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
         node.cmd(command_processor + ' &')
 
 
-def start_consensus_mecanism(node: any, should_open_terminal: bool = False):
+def start_consensus_mecanism(node: any, should_open_terminal: bool = False, keep_terminal_alive = True):
     """Start the consensus engine
 
     Args:
@@ -114,8 +118,9 @@ def start_consensus_mecanism(node: any, should_open_terminal: bool = False):
     info('\n*** Start Consensus Engine for ' + station_name + ' ***\n')
     
     if should_open_terminal:
+        if keep_terminal_alive: command += cmd_keep_alive
         makeTerm(node=node, title=station_name +
-                 ' Consensus Mecanism', cmd=command)
+                 ' Consensus Mecanism', cmd=command + cmd_keep_alive)
     else:
         node.cmd(command + ' &')
 

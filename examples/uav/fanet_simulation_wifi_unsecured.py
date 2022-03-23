@@ -200,21 +200,21 @@ def topology():
     # os.system(setNodePosition)
 
     info("\n*** Scenario 1: BS1 sends initial coordinates to Drone 5\n")
-    set_location(bs1, iterations=3, interval=7,
+    set_location(bs1, iterations=30, interval=5,
                  target='10.0.0.253', coordinates='11 11 11')
 
     info("\n*** Scenario 2: BS1 changes the destination coordinates through Drone 2\n")
-    set_location(bs1, iterations=3, interval=7,
+    set_location(bs1, iterations=30, interval=5,
                  target='10.0.0.250', coordinates='22 22 22')
 
     info("\n*** Scenario 3: Drone 4 is compromised and  tries to change the destination coordinates\n")
-    set_location(d4, iterations=3, interval=7,
+    set_location(d4, iterations=30, interval=5,
                  target='10.0.0.249', coordinates='33 33 33')
 
     info("\n*** Scenario 4: Connection with the base station is lost and \
 the compromised drone tries to change the destination coordinates\n")
     bs1.cmd("pkill -9 -f /rest/locationRestServer.py &")
-    set_location(d4, iterations=3, interval=7,
+    set_location(d4, iterations=30, interval=5,
                  target='10.0.0.250', coordinates='44 44 44')
 
     info("\n*** Scenario 5: A compromised base station joins the network tries to change the destination coordinates\n")
@@ -229,7 +229,7 @@ the compromised drone tries to change the destination coordinates\n")
                 ssid='adhocNet', proto='batman_adv',
                 mode='g', channel=5, ht_cap='HT40+')
     makeTerm(bs2, cmd="bash")
-    set_location(bs2, iterations=3, interval=7,
+    set_location(bs2, iterations=30, interval=5,
                  target='10.0.0.251', coordinates='55 55 55')
 
     info('\n*** Running CLI\n')

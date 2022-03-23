@@ -38,7 +38,7 @@ if [ $VALIDATOR = '0' ]; then
                 ! -f /pbft-shared/validators/validator-3.pub || \
                 ! -f /pbft-shared/validators/validator-4.pub ]];
     do sleep 1; done
-    PBFT_MEMBERS=$(echo \'['"'$(cat /pbft-shared/validators/validator-0.pub)'"','"'$(cat /pbft-shared/validators/validator-1.pub)'"','"'$(cat /pbft-shared/validators/validator-2.pub)'"','"'$(cat /pbft-shared/validators/validator-3.pub)'"','"'$(cat /pbft-shared/validators/validator-4.pub)'"']\')
+    PBFT_MEMBERS=$(echo ['"'$(cat /pbft-shared/validators/validator-0.pub)'"','"'$(cat /pbft-shared/validators/validator-1.pub)'"','"'$(cat /pbft-shared/validators/validator-2.pub)'"','"'$(cat /pbft-shared/validators/validator-3.pub)'"','"'$(cat /pbft-shared/validators/validator-4.pub)'"'])
     if [ ! -e /tmp/config.batch ]; then
         sawset proposal create \
         -k /etc/sawtooth/keys/validator.priv \

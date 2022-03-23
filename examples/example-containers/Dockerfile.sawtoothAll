@@ -24,6 +24,13 @@ COPY sawtooth_scripts/* /sawtooth_scripts/
 COPY sawtooth_scripts/bashrc_template /root/.bash_aliases
 RUN chmod +x /sawtooth_scripts/*
 
+EXPOSE 4004
+EXPOSE 8008
+EXPOSE 8800
+EXPOSE 5050
+EXPOSE 3030
+EXPOSE 5000
+
 ENV PATH="/sawtooth_scripts:/rest:${PATH}"
 
 CMD /bin/bash
