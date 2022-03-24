@@ -11,7 +11,6 @@ charset-normalizer==2.0.12
 click==8.0.3
 colorama==0.3.7
 command-not-found==0.3
--e git+dpfernandes@vs-ssh.visualstudio.com:v3/dpfernandes/BlockchainFANET/Containernet-Wifi@bd1cdf6fbcf762bed5546362cdafcbf339492d0a#egg=containernet
 cryptography==2.1.4
 csscompressor==0.9.5
 cupshelpers==1.0
