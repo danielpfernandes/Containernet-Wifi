@@ -1,0 +1,9 @@
+# some more ls aliases
+alias sawcheck_curl_blocks='curl http://localhost:8008/blocks'
+alias sawcheck_curl_peers='curl http://localhost:8008/peers'
+alias sawcheck_pbft_members='sawtooth settings list --filter sawtooth.consensus.pbft.members'
+
+# Alias definitions.
+# You may want to put all your additions into a separate file like
+# ~/.bash_aliases, instead of adding them here directly.
+# See /usr/share/doc/bash-doc/examples in the bash-doc package.

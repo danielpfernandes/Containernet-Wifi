@@ -7,16 +7,30 @@ RUN apt-get update && apt-get install -y \
     netcat \
     iperf \
     sawtooth \
+    sawtooth-pbft-engine \
     python-pip \
     iw
 
 RUN pip install --upgrade pip==19.3.1
 RUN pip install flask && pip install requests
 RUN pip install pandas
+RUN apt install sudo
+RUN apt-get install sawtooth-pbft-engine -y
+RUN apt-get install systemd -y
 RUN mkdir /data
-
+RUN mkdir /pbft-shared
 COPY rest/* /rest/
+COPY sawtooth_scripts/* /sawtooth_scripts/
+COPY sawtooth_scripts/bashrc_template /root/.bash_aliases
+RUN chmod +x /sawtooth_scripts/*
 
-ENV PATH="/rest:${PATH}"
+EXPOSE 4004
+EXPOSE 8008
+EXPOSE 8800
+EXPOSE 5050
+EXPOSE 3030
+EXPOSE 5000
+
+ENV PATH="/sawtooth_scripts:/rest:${PATH}"
 
 CMD /bin/bash
