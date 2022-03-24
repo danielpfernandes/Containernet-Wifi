@@ -28,8 +28,8 @@ steps:
 
 - script: |
     sudo apt-get install ansible aptitude
-    cd ansible
-    sudo ansible-playbook -i "localhost," -c local install
+    cd 
+    sudo ansible-playbook -i "localhost," -c local install.yml
     cd ..
     sudo python setup.py install
   displayName: 'Build project'
