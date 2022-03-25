@@ -29,7 +29,6 @@ steps:
 - script: |
     sudo apt-get install ansible
     sudo ansible-playbook -i "localhost," -c local ansible/install_pipeline.yml
-    sudo python setup.py install
   displayName: 'Run ansible-playbook'
 
 - script: |
@@ -42,6 +41,7 @@ steps:
 
 - script: |
     sudo docker pull ubuntu:trusty
+    sudo python setup.py install
   displayName: 'Download Ubuntu docker image for Containernet example'
 
 - script: |
