@@ -33,6 +33,17 @@ steps:
   displayName: 'Run ansible-playbook'
 
 - script: |
+    sudo sh util/install.sh -W
+  displayName: 'Build and install Containernet (using Mininet installer)'
+
+- script: |
+    make -f Makefile develop
+   - displayName: install Containernet Python egg etc.
+- script: |
+    docker pull ubuntu:trusty
+   - displayNname: download 'ubuntu' docker image for Containernet example
+
+- script: |
     pip install pytest pytest-azurepipelines
     pytest
   displayName: 'pytest'

@@ -48,15 +48,3 @@
 
    - name: install pexpect
      pip: name=pexpect executable={{pip_path.stdout}}
-
-   - name: build and install Containernet (using Mininet installer)
-     shell: util/install.sh -W
-
-   - name: install Containernet Python egg etc.
-     shell: make -f Makefile develop
-
-   - name: download 'ubuntu' docker image for Containernet example
-     shell: docker pull ubuntu:trusty
-     tags:
-       - notindocker
-       - nopull
