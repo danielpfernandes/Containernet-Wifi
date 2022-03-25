@@ -27,9 +27,8 @@ steps:
   displayName: 'Install dependencies'
 
 - script: |
-    sudo apt-get install ansible aptitude
-    sudo ansible-playbook -i "localhost," -c local ansible/install.yml
-    cd ..
+    sudo apt-get install ansible
+    sudo ansible-playbook -i "localhost," -c local ansible/install_pipeline.yml
     sudo python setup.py install
   displayName: 'Build project'
 
