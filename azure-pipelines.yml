@@ -38,11 +38,11 @@ steps:
 
 - script: |
     sudo make -f Makefile develop
-   - displayName: install Containernet Python egg etc.
+   - displayName: 'Install Containernet Python egg etc.'
 
 - script: |
     sudo docker pull ubuntu:trusty
-   - displayNname: download 'ubuntu' docker image for Containernet example
+   - displayNname: 'Download Ubuntu docker image for Containernet example'
 
 - script: |
     pip install pytest pytest-azurepipelines
