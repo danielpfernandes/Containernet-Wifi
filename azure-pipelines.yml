@@ -42,7 +42,7 @@ steps:
 
 - script: |
     sudo docker pull ubuntu:trusty
-  displayNname: 'Download Ubuntu docker image for Containernet example'
+  displayName: 'Download Ubuntu docker image for Containernet example'
 
 - script: |
     pip install pytest pytest-azurepipelines
