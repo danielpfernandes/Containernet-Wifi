@@ -30,7 +30,7 @@ steps:
     sudo apt-get install ansible
     sudo ansible-playbook -i "localhost," -c local ansible/install_pipeline.yml
     sudo python setup.py install
-  displayName: 'Build project'
+  displayName: 'Run ansible-playbook'
 
 - script: |
     pip install pytest pytest-azurepipelines
