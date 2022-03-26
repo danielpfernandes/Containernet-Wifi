@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ -z $1 ]; then
+if [ -z "$1" ]; then
     echo "Invalid command, pass one of the following arguments:"
     echo "validator.sh <argument>"
     echo "  Valid arguments: base1, drone1, drone2, drone3, drone4"
@@ -13,13 +13,18 @@ rm -rf /var/log/sawtooth/*
 IP=""
 VALIDATOR=""
 PEERS=""
+BASE1_IP='10.0.0.1'
+DRONE1_IP='10.0.0.249'
+DRONE2_IP='10.0.0.250'
+DRONE3_IP='10.0.0.251'
+DRONE4_IP='10.0.0.252'
 
 case $1 in
-base1) IP='10.0.0.1' VALIDATOR='0';;
-drone1) IP='10.0.0.249' VALIDATOR='1'  PEERS='10.0.0.1:8800';;
-drone2) IP='10.0.0.250' VALIDATOR='2'  PEERS='10.0.0.1:8800, 10.0.0.249:8800';;
-drone3) IP='10.0.0.251' VALIDATOR='3'  PEERS='10.0.0.1:8800, 10.0.0.249:8800, 10.0.0.250:8800';;
-drone4) IP='10.0.0.252' VALIDATOR='4'  PEERS='10.0.0.1:8800, 10.0.0.249:8800, 10.0.0.250:8800, 10.0.0.251:8800';;
+base1)  IP=$BASE1_IP  VALIDATOR='0' PEERS="tcp://${DRONE1_IP}:8800,tcp://${DRONE2_IP}:8800,tcp://${DRONE3_IP},tcp://${DRONE4_IP}:8800";;
+drone1) IP=$DRONE1_IP VALIDATOR='1' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE2_IP}:8800,tcp://${DRONE3_IP},tcp://${DRONE4_IP}:8800";;
+drone2) IP=$DRONE2_IP VALIDATOR='2' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE1_IP}:8800,tcp://${DRONE3_IP},tcp://${DRONE4_IP}:8800";;
+drone3) IP=$DRONE3_IP VALIDATOR='3' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE1_IP}:8800,tcp://${DRONE2_IP},tcp://${DRONE4_IP}:8800";;
+drone4) IP=$DRONE4_IP VALIDATOR='4' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE1_IP}:8800,tcp://${DRONE2_IP},tcp://${DRONE3_IP}:8800";;
 *) echo "Invalid option";;
 esac 
 
@@ -58,20 +63,14 @@ fi &&
 if [ ! -e /root/.sawtooth/keys/root.priv ]; then
     sawtooth keygen root
 fi &&
-
-if [ $VALIDATOR = '0' ]; then
-    sawtooth-validator -vv \
-        --endpoint tcp://"${IP}":8800 \
-        --bind network:tcp://"${IP}":8800
-else
-    sawtooth-validator -vv \
-        --endpoint tcp://"${IP}":8800 \
-        --bind network:tcp://"${IP}":8800 \
-        --peers "${PEERS}"
-    #    --bind component:tcp://127.0.0.1:4004 \
-    #    --bind consensus:tcp://127.0.0.1:5050 \
-    #    --bind network:tcp://127.0.0.1:8800 \
-    #    --scheduler parallel \
-    #    --peering static \
-    #    --maximum-peer-connectivity 10000 \
-fi
+sawtooth-validator -vv \
+    --endpoint tcp://${IP}:8800 \
+    --bind network:tcp://${IP}:8800 \
+    --bind component:tcp://${IP}:4004 \
+    --peers $PEERS
+#    --bind component:tcp://127.0.0.1:4004 \
+#    --bind consensus:tcp://127.0.0.1:5050 \
+#    --bind network:tcp://127.0.0.1:8800 \
+#    --scheduler parallel \
+#    --peering static \
+#    --maximum-peer-connectivity 10000 \

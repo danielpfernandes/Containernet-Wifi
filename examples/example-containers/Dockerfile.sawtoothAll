@@ -1,21 +1,27 @@
-FROM hyperledger/sawtooth-all:latest
+FROM ubuntu:bionic
+
+RUN apt-get update && apt-get install -y gnupg2 software-properties-common
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 8AA7AF1F1091A5FD
+RUN add-apt-repository 'deb [arch=amd64] http://repo.sawtooth.me/ubuntu/chime/stable bionic universe'
 
 RUN apt-get update && apt-get install -y \
     net-tools \
     iputils-ping \
-    iproute \
+    iproute2 \
     netcat \
     iperf \
     sawtooth \
     sawtooth-pbft-engine \
+    python3-sawtooth-poet-cli \
+    python3-sawtooth-poet-engine \
+    python3-sawtooth-poet-families \
     python-pip \
     iw
 
-RUN pip install --upgrade pip==19.3.1
+RUN pip install --upgrade pip==20.3.4
 RUN pip install flask && pip install requests
 RUN pip install pandas
 RUN apt install sudo
-RUN apt-get install sawtooth-pbft-engine -y
 RUN apt-get install systemd -y
 RUN mkdir /data
 RUN mkdir /pbft-shared

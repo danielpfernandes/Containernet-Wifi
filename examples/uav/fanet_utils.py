@@ -68,8 +68,8 @@ def start_rest_api(node: any, should_open_terminal: bool = False, keep_terminal_
         should_open_terminal (bool, optional): If True, opens a new terminal. Defaults to False.
     """
     station_name = str(node.name)
-    
-    command = 'sudo -u sawtooth sawtooth-rest-api -v --connect tcp://localhost:4004'
+    station_ip = str(node.params.get('ip'))
+    command = 'sudo -u sawtooth sawtooth-rest-api -v --connect tcp://' + station_ip + ':4004'
     
     info('\n*** Start REST API for ' + station_name + ' ***\n')
     
@@ -88,8 +88,9 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
         should_open_terminal (bool, optional): If True, opens a new terminal for each processor. Defaults to False.
     """
     station_name = str(node.name)
-    command_transaction = 'sudo -u sawtooth settings-tp -v'
-    command_processor = 'sudo -u sawtooth intkey-tp-python -v'
+    station_ip = str(node.params.get('ip'))
+    command_transaction = 'sudo -u sawtooth settings-tp -v --connect tcp://' + station_ip + ':4004'
+    command_processor = 'sudo -u sawtooth intkey-tp-python -v --connect tcp://' + station_ip + ':4004'
     
     info('\n*** Start Transaction Processors for ' + station_name + ' ***\n')
     
