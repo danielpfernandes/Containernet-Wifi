@@ -36,6 +36,7 @@ def topology():
                          cls=DockerSta,
                          dimage=DOCKER_IMAGE,
                          ports=PORTS,
+                         port_bindings={88:8008, 8008:88},
                          volumes=["/tmp/base1/data:/data",
                                   "/tmp/pbft-shared:/pbft-shared"])
 
@@ -174,18 +175,21 @@ def topology():
     net.socketServer(ip='127.0.0.1', port=12345)
 
     info('\n*** Starting Sawtooth on the Base Station ***\n')
-    initialize_sawtooth(bs1, should_open_terminal=True, wait_time_in_seconds=10)
+    initialize_sawtooth(bs1, should_open_terminal=True, wait_time_in_seconds=5)
 
     info('\n*** Starting Sawtooth on the Drones ***\n')
-    initialize_sawtooth(d1, should_open_terminal=True, wait_time_in_seconds=10)
-    initialize_sawtooth(d2, should_open_terminal=True)
-    initialize_sawtooth(d3)
-    initialize_sawtooth(d4)
+    initialize_sawtooth(d1, should_open_terminal=True, wait_time_in_seconds=5)
+    initialize_sawtooth(d2, should_open_terminal=True, wait_time_in_seconds=5)
+    initialize_sawtooth(d3, should_open_terminal=True, wait_time_in_seconds=5)
+    initialize_sawtooth(d4, should_open_terminal=True, wait_time_in_seconds=5)
     #initialize_sawtooth(d5)
 
     # info('\n*** Start drone terminals\n')
     makeTerm(bs1, cmd="bash")
     makeTerm(d1, cmd="bash")
+    makeTerm(d2, cmd="bash")
+    makeTerm(d3, cmd="bash")
+    makeTerm(d4, cmd="bash")
 
     # info("*** Starting CoppeliaSim\n")
     path = os.path.dirname(os.path.abspath(__file__))

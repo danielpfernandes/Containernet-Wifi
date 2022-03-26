@@ -7,15 +7,19 @@ if [ -z $1 ]; then
     exit 1
 fi
 
+rm -rf /var/lib/sawtooth/*
+rm -rf /var/log/sawtooth/*
+
 IP=""
 VALIDATOR=""
+PEERS=""
 
 case $1 in
 base1) IP='10.0.0.1' VALIDATOR='0';;
-drone1) IP='10.0.0.249' VALIDATOR='1';;
-drone2) IP='10.0.0.250' VALIDATOR='2';;
-drone3) IP='10.0.0.251' VALIDATOR='3';;
-drone4) IP='10.0.0.252' VALIDATOR='4';;
+drone1) IP='10.0.0.249' VALIDATOR='1'  PEERS='10.0.0.1:8800';;
+drone2) IP='10.0.0.250' VALIDATOR='2'  PEERS='10.0.0.1:8800, 10.0.0.249:8800';;
+drone3) IP='10.0.0.251' VALIDATOR='3'  PEERS='10.0.0.1:8800, 10.0.0.249:8800, 10.0.0.250:8800';;
+drone4) IP='10.0.0.252' VALIDATOR='4'  PEERS='10.0.0.1:8800, 10.0.0.249:8800, 10.0.0.250:8800, 10.0.0.251:8800';;
 *) echo "Invalid option";;
 esac 
 
@@ -54,17 +58,20 @@ fi &&
 if [ ! -e /root/.sawtooth/keys/root.priv ]; then
     sawtooth keygen root
 fi &&
-sawtooth-validator -vv \
-    --endpoint tcp://"${IP}":8800 \
-    --bind network:tcp://"${IP}":8800\
-    --peers tcp://10.0.0.1:8800,\
-            tcp://10.0.0.249:8800,\
-            tcp://10.0.0.250:8800,\
-            tcp://10.0.0.251:8800,\
-            tcp://10.0.0.252:8800
-#    --bind component:tcp://127.0.0.1:4004 \
-#    --bind consensus:tcp://127.0.0.1:5050 \
-#    --bind network:tcp://127.0.0.1:8800 \
-#    --scheduler parallel \
-#    --peering static \
-#    --maximum-peer-connectivity 10000 \
+
+if [ $VALIDATOR = '0' ]; then
+    sawtooth-validator -vv \
+        --endpoint tcp://"${IP}":8800 \
+        --bind network:tcp://"${IP}":8800
+else
+    sawtooth-validator -vv \
+        --endpoint tcp://"${IP}":8800 \
+        --bind network:tcp://"${IP}":8800 \
+        --peers "${PEERS}"
+    #    --bind component:tcp://127.0.0.1:4004 \
+    #    --bind consensus:tcp://127.0.0.1:5050 \
+    #    --bind network:tcp://127.0.0.1:8800 \
+    #    --scheduler parallel \
+    #    --peering static \
+    #    --maximum-peer-connectivity 10000 \
+fi

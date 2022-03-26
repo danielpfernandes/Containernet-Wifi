@@ -1,4 +1,4 @@
-FROM hyperledger/sawtooth-all:1.1.3
+FROM hyperledger/sawtooth-all:latest
 
 RUN apt-get update && apt-get install -y \
     net-tools \
@@ -19,6 +19,7 @@ RUN apt-get install sawtooth-pbft-engine -y
 RUN apt-get install systemd -y
 RUN mkdir /data
 RUN mkdir /pbft-shared
+RUN pip install pyzmq
 COPY rest/* /rest/
 COPY sawtooth_scripts/* /sawtooth_scripts/
 COPY sawtooth_scripts/bashrc_template /root/.bash_aliases
