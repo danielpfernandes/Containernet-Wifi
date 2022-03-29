@@ -3,18 +3,18 @@
 This is the most simple example to showcase Containernet.
 """
 
-import subprocess
 import os
+import subprocess
 import time
-from sys import stdout
+
 from mininet.cli import CLI
-from mn_wifi.link import adhoc
-from mn_wifi.telemetry import telemetry
 from mininet.log import info, setLogLevel
+from mn_wifi.link import adhoc
+
 from containernet.net import Containernet
 from containernet.node import DockerSta
-from containernet.term import makeTerm, makeTerms
-from examples.uav.fanet_utils import set_location
+from containernet.term import makeTerm
+from examples.uav.fanet_utils import set_location, setup_network
 
 
 def topology():
@@ -112,57 +112,7 @@ def topology():
                         cpu_quota=10000,
                         position='20,60,10')
 
-    net.setPropagationModel(model="logDistance", exp=4.5)
-
-    info("\n*** Configuring wifi nodes\n")
-
-    net.configureWifiNodes()
-
-    net.addLink(bs1, cls=adhoc, intf='base1-wlan0',
-                ssid='adhocNet', proto='batman_adv',
-                mode='g', channel=5, ht_cap='HT40+')
-
-    net.addLink(d1, cls=adhoc, intf='drone1-wlan0',
-                ssid='adhocNet', proto='batman_adv',
-                mode='g', channel=5, ht_cap='HT40+')
-
-    net.addLink(d2, cls=adhoc, intf='drone2-wlan0',
-                ssid='adhocNet', proto='batman_adv',
-                mode='g', channel=5, ht_cap='HT40+')
-
-    net.addLink(d3, cls=adhoc, intf='drone3-wlan0',
-                ssid='adhocNet', proto='batman_adv',
-                mode='g', channel=5, ht_cap='HT40+')
-
-    net.addLink(d4, cls=adhoc, intf='drone4-wlan0',
-                ssid='adhocNet', proto='batman_adv',
-                mode='g', channel=5, ht_cap='HT40+')
-
-    net.addLink(d5, cls=adhoc, intf='drone5-wlan0',
-                ssid='adhocNet', proto='batman_adv',
-                mode='g', channel=5, ht_cap='HT40+')
-
-    net.addLink(bs1, cls=adhoc, intf='base1-wlan0',
-                ssid='adhocNet', proto='batman_adv',
-                mode='g', channel=5, ht_cap='HT40+')
-
-    info('\n*** Starting network\n')
-    net.build()
-    net.start()
-
-    #nodes = net.stations
-    #telemetry(nodes=nodes, single=True, data_type='position')
-
-    sta_drone = []
-    for n in net.stations:
-        sta_drone.append(n.name)
-    sta_drone_send = ' '.join(map(str, sta_drone))
-
-    # # set_socket_ip: localhost must be replaced by ip address
-    # # of the network interface of your system
-    # # The same must be done with socket_client.py
-    info('\n*** Starting Socket Server\n')
-    net.socketServer(ip='127.0.0.1', port=12345)
+    setup_network(net, bs1, d1, d2, d3, d4, d5)
 
     info('\n*** Starting REST server on drones\n')
     d1.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
@@ -182,21 +132,10 @@ def topology():
     makeTerm(d4, cmd="tail -f /data/locations.csv")
     makeTerm(d5, cmd="tail -f /data/locations.csv")
 
-    # info("*** Starting CoppeliaSim\n")
-    path = os.path.dirname(os.path.abspath(__file__))
-    # os.system('{}/CoppeliaSim_Edu_V4_1_0_Ubuntu/coppeliaSim.sh -s {}'
-    #             '/simulation.ttt -gGUIITEMS_2 &'.format(path, path))
-    # time.sleep(10)
-
-    info("\n*** Perform a simple test\n")
-    simpleTest = 'python {}/simpleTest.py '.format(
-        path) + sta_drone_send + ' &'
-    os.system(simpleTest)
-
     time.sleep(5)
 
     info("\n*** Configure the node position\n")
-    #setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
+    # setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
     # os.system(setNodePosition)
 
     info("\n*** Scenario 1: BS1 sends initial coordinates to Drone 5\n")
@@ -242,7 +181,7 @@ the compromised drone tries to change the destination coordinates\n")
 
 
 def kill_process():
-    #os.system('pkill -9 -f coppeliaSim')
+    # os.system('pkill -9 -f coppeliaSim')
     os.system('pkill -9 -f simpleTest.py')
     os.system('pkill -9 -f setNodePosition.py')
     os.system('rm examples/uav/data/*')
