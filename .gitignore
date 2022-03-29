@@ -24,3 +24,5 @@ data/*
 prometheus/data/*
 mininet-wifi/
 openflow/
+prometheus/prometheus
+prometheus/promtool
