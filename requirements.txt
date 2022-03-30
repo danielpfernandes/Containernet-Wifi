@@ -4,3 +4,10 @@ Flask==2.0.3
 numpy==1.19.5
 pandas==1.1.5
 python-iptables
+matplotlib==2.1.1
+Pillow==5.1.0
+pipreqs==0.4.11
+pytest==4.6.4
+requests==2.27.1
+docker==5.0.3
+pexpect==4.8.0
