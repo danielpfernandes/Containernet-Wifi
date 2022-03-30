@@ -127,11 +127,10 @@ def topology():
     initialize_sawtooth(bs1, should_open_terminal=True, wait_time_in_seconds=5)
 
     info('\n*** Starting Sawtooth on the Drones ***\n')
-    initialize_sawtooth(d1, should_open_terminal=True, wait_time_in_seconds=5)
-    initialize_sawtooth(d2, should_open_terminal=True, wait_time_in_seconds=5)
-    initialize_sawtooth(d3, should_open_terminal=True, wait_time_in_seconds=5)
-    initialize_sawtooth(d4, should_open_terminal=True, wait_time_in_seconds=5)
-    # initialize_sawtooth(d5)
+    initialize_sawtooth(d1,  wait_time_in_seconds=5)
+    initialize_sawtooth(d2,  wait_time_in_seconds=5)
+    initialize_sawtooth(d3,  wait_time_in_seconds=5)
+    initialize_sawtooth(d4,  wait_time_in_seconds=5)
 
     # info('\n*** Start drone terminals\n')
     makeTerm(bs1, cmd="bash")
@@ -149,7 +148,7 @@ def topology():
     info('\n*** Running CLI\n')
     CLI(net)
 
-    info('\n*** Stopping network')
+    info('\n*** Stopping network\n')
     kill_process()
     net.stop()
     grafana.kill()

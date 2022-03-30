@@ -77,9 +77,11 @@ def set_location(
 
 def initialize_sawtooth(node: any, should_open_terminal=False, wait_time_in_seconds: int = 2,
                         keep_terminal_alive=False):
-    start_validator(node, should_open_terminal, wait_time_in_seconds, keep_terminal_alive)
+    start_validator(node, should_open_terminal,
+                    wait_time_in_seconds, keep_terminal_alive)
     start_rest_api(node, should_open_terminal, keep_terminal_alive)
-    start_transaction_processors(node, should_open_terminal, keep_terminal_alive)
+    start_transaction_processors(
+        node, should_open_terminal, keep_terminal_alive)
     start_consensus_mechanism(node, should_open_terminal, keep_terminal_alive)
 
 
@@ -148,8 +150,10 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
     """
     station_name = str(node.name)
     station_ip = str(node.params.get('ip'))
-    command_transaction = 'sudo -u sawtooth settings-tp -v --connect tcp://' + station_ip + ':4004'
-    command_processor = 'sudo -u sawtooth intkey-tp-python -v --connect tcp://' + station_ip + ':4004'
+    command_transaction = 'sudo -u sawtooth settings-tp -v --connect tcp://' + \
+        station_ip + ':4004'
+    command_processor = 'sudo -u sawtooth intkey-tp-python -v --connect tcp://' + \
+        station_ip + ':4004'
 
     info('\n*** Start Transaction Processors for ' + station_name + ' ***\n')
 
@@ -158,16 +162,18 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
             command_transaction += cmd_keep_alive
             command_processor += cmd_keep_alive
 
-        makeTerm(node=node, title=station_name + ' Transaction Settings', cmd=command_transaction)
+        makeTerm(node=node, title=station_name +
+                 ' Transaction Settings', cmd=command_transaction)
         time.sleep(wait_time_in_seconds)
-        makeTerm(node=node, title=station_name + ' Intkey Processor', cmd=command_processor)
+        makeTerm(node=node, title=station_name +
+                 ' Intkey Processor', cmd=command_processor)
     else:
         node.cmd(command_transaction + ' &')
         time.sleep(wait_time_in_seconds)
         node.cmd(command_processor + ' &')
 
 
-def start_consensus_mechanism(node: any, should_open_terminal: bool = False, keep_terminal_alive=True):
+def start_consensus_mechanism(node: any, should_open_terminal: bool = False, keep_terminal_alive=False):
     """Start the consensus engine
 
     Args:
@@ -183,7 +189,8 @@ def start_consensus_mechanism(node: any, should_open_terminal: bool = False, kee
     if should_open_terminal:
         if keep_terminal_alive:
             command += cmd_keep_alive
-        makeTerm(node=node, title=station_name + ' Consensus Mechanism', cmd=command + cmd_keep_alive)
+        makeTerm(node=node, title=station_name +
+                 ' Consensus Mechanism', cmd=command + cmd_keep_alive)
     else:
         node.cmd(command + ' &')
 
@@ -226,3 +233,4 @@ def kill_process():
     os.system('pkill -9 -f simpleTest.py')
     os.system('pkill -9 -f setNodePosition.py')
     os.system('rm examples/uav/data/*')
+    os.system('rm -rf /tmp/pbft-shared')
