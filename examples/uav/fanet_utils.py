@@ -227,6 +227,11 @@ def create_batch_settings(node, public_key: dict):
     sawtooth.publisher.max_batches_per_block=1200 \
     sawtooth.consensus.pbft.members=" + pbft_members)
 
+def set_destination(node, scenario:int, latitude: int, longitude: int, altitude: int):
+    node.cmd("intkey set scenario-" + str(scenario) + "-latitude " + str(latitude))
+    node.cmd("intkey set scenario-" + str(scenario) + "-longitude " + str(longitude))
+    node.cmd("intkey set scenario-" + str(scenario) + "-altitude " + str(altitude))
+
 
 def kill_process():
     # os.system('pkill -9 -f coppeliaSim')
