@@ -237,7 +237,7 @@ def set_destination(node: any, latitude: int, longitude: int, altitude: int):
         longitude (int): Longitude
         altitude (int): Altitude
     """
-    node.cmd("intkey set " + time.time() + " " + str(latitude) + str(longitude) + str(altitude))
+    node.cmd("intkey set " + str(time.time()) + " " + str(latitude) + str(longitude) + str(altitude))
 
 
 def get_destination(node: any) -> str:
@@ -249,7 +249,9 @@ def get_destination(node: any) -> str:
     Returns:
         str: The coordinate registries
     """
-    return node.cmd("intkey list")
+    node.cmd("sh /sawtooth_scripts/get_destination.sh")
+
+    return node.cmd("cat /data/locations.log")
 
 
 def kill_process():

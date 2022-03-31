@@ -13,7 +13,7 @@ from mininet.log import info, setLogLevel
 from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.term import makeTerm
-from fanet_utils import initialize_sawtooth, kill_process, set_destination, setup_network
+from fanet_utils import get_destination, initialize_sawtooth, kill_process, set_destination, setup_network
 
 
 def topology():
@@ -132,17 +132,21 @@ def topology():
     initialize_sawtooth(d3,  wait_time_in_seconds=5)
     initialize_sawtooth(d4,  wait_time_in_seconds=5)
 
-    time.sleep(5)
+    time.sleep(10)
 
     # info("\n*** Configure the node position\n")
     # setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
     # os.system(setNodePosition)
     
     info("\n*** Scenario 6: BS1 sends the new coordinates and the Sawtooth network validates the update of the information\n")
-    set_destination(bs1, 6, 66, 66, 66)
+    set_destination(bs1, 66, 66, 66)
     
     info("\n*** Scenario 7: Drone 3 need to rearrange the coordinates and the Sawtooth network validates the update of the information\n")
-    set_destination(d3, 7, 77, 77, 77)
+    set_destination(d3, 77, 77, 77)
+    result = get_destination(d4)
+    
+    info(result)
+    time.sleep(5)
     
     info('\n*** Start drone terminals\n')
     makeTerm(bs1, cmd="bash")
