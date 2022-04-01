@@ -13,7 +13,7 @@ from mininet.log import info, setLogLevel
 from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.term import makeTerm
-from examples import adhoc
+from mn_wifi.link import adhoc
 from fanet_utils import get_sawtooth_destination, initialize_sawtooth, kill_process, set_sawtooth_destination, set_rest_location, setup_network
 
 

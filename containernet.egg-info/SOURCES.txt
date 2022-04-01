@@ -25,12 +25,6 @@ containernet/examples/clustercli.py
 containernet/examples/clusterdemo.py
 containernet/examples/clusterperf.py
 containernet/examples/consoles.py
-containernet/examples/containernet_container_test.py
-containernet/examples/containernet_example.py
-containernet/examples/containernet_example_cmd_field.py
-containernet/examples/containernet_example_server_curl.py
-containernet/examples/containernet_volume_example.py
-containernet/examples/containernet_wifi.py
 containernet/examples/controllers.py
 containernet/examples/controllers2.py
 containernet/examples/controlnet.py

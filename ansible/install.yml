@@ -51,6 +51,7 @@
 
    - name: build and install Containernet (using Mininet installer)
      shell: containernet/util/install.sh -W
+     ignore_errors: yes
      args:
        chdir: ../../
 
