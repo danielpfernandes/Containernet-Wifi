@@ -56,7 +56,7 @@ def setup_network(net: Containernet, *argv):
     os.system(simple_test)
 
 
-def set_location(
+def set_rest_location(
         station: any, iterations=10, interval=10, target='10.0.0.249', coordinates='0 0 0'):
     """Set the drone location
 
@@ -228,7 +228,7 @@ def create_batch_settings(node, public_key: dict):
     sawtooth.consensus.pbft.members=" + pbft_members)
 
 
-def set_destination(node: any, latitude: int, longitude: int, altitude: int):
+def set_sawtooth_destination(node: any, latitude: int, longitude: int, altitude: int):
     """Sets the coordinates to the destination of the FANET
 
     Args:
@@ -240,7 +240,7 @@ def set_destination(node: any, latitude: int, longitude: int, altitude: int):
     node.cmd("intkey set " + str(time.time()) + " " + str(latitude) + str(longitude) + str(altitude))
 
 
-def get_destination(node: any) -> str:
+def get_sawtooth_destination(node: any) -> str:
     """Get the coordinates stored in the node transactions
     
     Args:
