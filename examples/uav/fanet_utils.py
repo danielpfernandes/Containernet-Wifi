@@ -151,9 +151,9 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
     station_name = str(node.name)
     station_ip = str(node.params.get('ip'))
     command_transaction = 'sudo -u sawtooth settings-tp -v --connect tcp://' + \
-        station_ip + ':4004'
+                          station_ip + ':4004'
     command_processor = 'sudo -u sawtooth intkey-tp-python -v --connect tcp://' + \
-        station_ip + ':4004'
+                        station_ip + ':4004'
 
     info('\n*** Start Transaction Processors for ' + station_name + ' ***\n')
 
@@ -163,10 +163,10 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
             command_processor += cmd_keep_alive
 
         makeTerm(node=node, title=station_name +
-                 ' Transaction Settings', cmd=command_transaction)
+                                  ' Transaction Settings', cmd=command_transaction)
         time.sleep(wait_time_in_seconds)
         makeTerm(node=node, title=station_name +
-                 ' Intkey Processor', cmd=command_processor)
+                                  ' Intkey Processor', cmd=command_processor)
     else:
         node.cmd(command_transaction + ' &')
         time.sleep(wait_time_in_seconds)
@@ -190,7 +190,7 @@ def start_consensus_mechanism(node: any, should_open_terminal: bool = False, kee
         if keep_terminal_alive:
             command += cmd_keep_alive
         makeTerm(node=node, title=station_name +
-                 ' Consensus Mechanism', cmd=command + cmd_keep_alive)
+                                  ' Consensus Mechanism', cmd=command + cmd_keep_alive)
     else:
         node.cmd(command + ' &')
 
@@ -226,6 +226,32 @@ def create_batch_settings(node, public_key: dict):
     sawtooth.consensus.algorithm.version=1.0 \
     sawtooth.publisher.max_batches_per_block=1200 \
     sawtooth.consensus.pbft.members=" + pbft_members)
+
+
+def set_destination(node: any, latitude: int, longitude: int, altitude: int):
+    """Sets the coordinates to the destination of the FANET
+
+    Args:
+        node (any): Mininet node
+        latitude (int): Latitude
+        longitude (int): Longitude
+        altitude (int): Altitude
+    """
+    node.cmd("intkey set " + str(time.time()) + " " + str(latitude) + str(longitude) + str(altitude))
+
+
+def get_destination(node: any) -> str:
+    """Get the coordinates stored in the node transactions
+    
+    Args:
+        node (any): Mininet node
+
+    Returns:
+        str: The coordinate registries
+    """
+    node.cmd("sh /sawtooth_scripts/get_destination.sh")
+
+    return node.cmd("cat /data/locations.log")
 
 
 def kill_process():

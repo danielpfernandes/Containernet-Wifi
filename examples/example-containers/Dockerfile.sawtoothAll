@@ -26,6 +26,7 @@ RUN apt-get install systemd -y
 RUN mkdir /data
 RUN mkdir /pbft-shared
 RUN pip install pyzmq
+RUN apt install curl -y
 COPY rest/* /rest/
 COPY sawtooth_scripts/* /sawtooth_scripts/
 COPY sawtooth_scripts/bashrc_template /root/.bash_aliases
