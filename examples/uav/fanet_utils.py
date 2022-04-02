@@ -1,5 +1,6 @@
 import os
 import time
+from matplotlib import cm
 
 from mininet.log import info
 from mn_wifi.link import adhoc
@@ -83,6 +84,7 @@ def initialize_sawtooth(node: any, should_open_terminal=False, wait_time_in_seco
     start_transaction_processors(
         node, should_open_terminal, keep_terminal_alive)
     start_consensus_mechanism(node, should_open_terminal, keep_terminal_alive)
+    time.sleep(wait_time_in_seconds)
 
 
 def start_validator(node: any, should_open_terminal: bool = False,
@@ -150,27 +152,35 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
     """
     station_name = str(node.name)
     station_ip = str(node.params.get('ip'))
-    command_transaction = 'sudo -u sawtooth settings-tp -v --connect tcp://' + \
+    command_settings_tp = 'sudo -u sawtooth settings-tp -v --connect tcp://' + \
                           station_ip + ':4004'
-    command_processor = 'sudo -u sawtooth intkey-tp-python -v --connect tcp://' + \
+    command_intkey_tp = 'sudo -u sawtooth intkey-tp-python -v --connect tcp://' + \
+                        station_ip + ':4004'
+    command_poet_validator_registry_tp = 'sudo -u sawtooth poet-validator-registry-tp -v --connect tcp://' + \
                         station_ip + ':4004'
 
     info('\n*** Start Transaction Processors for ' + station_name + ' ***\n')
 
     if should_open_terminal:
         if keep_terminal_alive:
-            command_transaction += cmd_keep_alive
-            command_processor += cmd_keep_alive
+            command_settings_tp += cmd_keep_alive
+            command_intkey_tp += cmd_keep_alive
+            command_poet_validator_registry_tp += cmd_keep_alive
 
         makeTerm(node=node, title=station_name +
-                                  ' Transaction Settings', cmd=command_transaction)
+                                  ' Settings Transaction Processor', cmd=command_settings_tp)
         time.sleep(wait_time_in_seconds)
         makeTerm(node=node, title=station_name +
-                                  ' Intkey Processor', cmd=command_processor)
-    else:
-        node.cmd(command_transaction + ' &')
+                                  ' Intkey Transaction Processor', cmd=command_intkey_tp)
         time.sleep(wait_time_in_seconds)
-        node.cmd(command_processor + ' &')
+        makeTerm(node=node, title=station_name +
+                                  ' PoET Validator Registry Transaction Processor', cmd=command_poet_validator_registry_tp)
+    else:
+        node.cmd(command_settings_tp + ' &')
+        time.sleep(wait_time_in_seconds)
+        node.cmd(command_intkey_tp + ' &')
+        time.sleep(wait_time_in_seconds)
+        node.cmd(command_poet_validator_registry_tp + ' &')
 
 
 def start_consensus_mechanism(node: any, should_open_terminal: bool = False, keep_terminal_alive=False):
@@ -182,7 +192,7 @@ def start_consensus_mechanism(node: any, should_open_terminal: bool = False, kee
         keep_terminal_alive (bool, optional): Leave the terminal open if it fails
     """
     station_name = str(node.name)
-    command = 'sudo -u sawtooth pbft-engine -vv --connect tcp://localhost:5050'
+    command = 'sudo -u sawtooth poet-engine -vv --connect tcp://localhost:5050'
 
     info('\n*** Start Consensus Engine for ' + station_name + ' ***\n')
 
@@ -209,23 +219,6 @@ def generate_keypair(node: any) -> str:
     node.cmd("sawadm keygen")
     key = node.cmd("cat /etc/sawtooth/keys/validator.pub")
     return key.replace('\r\n', '')
-
-
-def create_batch_settings(node, public_key: dict):
-    """Create batch to initialize the consensus settings.
-    Args:
-        node (any): Mininet node
-        public_key (dict): Dictionary with the network public keys
-    """
-    pbft_members = '\'["' + public_key['d1'] + '","' + public_key['d2'] + '","' + public_key['d3'] + \
-                   '","' + public_key['d4'] + '","' + public_key['d5'] + \
-                   '","' + public_key['bs1'] + '"]\''
-    node.cmd("sawset proposal create --key $HOME/.sawtooth/keys/root.priv \
-    -o /tmp/config-consensus.batch \
-    sawtooth.consensus.algorithm.name=pbft \
-    sawtooth.consensus.algorithm.version=1.0 \
-    sawtooth.publisher.max_batches_per_block=1200 \
-    sawtooth.consensus.pbft.members=" + pbft_members)
 
 
 def set_sawtooth_destination(node: any, latitude: int, longitude: int, altitude: int):
@@ -259,4 +252,4 @@ def kill_process():
     os.system('pkill -9 -f simpleTest.py')
     os.system('pkill -9 -f setNodePosition.py')
     os.system('rm examples/uav/data/*')
-    os.system('rm -rf /tmp/pbft-shared')
+    os.system('rm -rf /tmp/poet-shared')

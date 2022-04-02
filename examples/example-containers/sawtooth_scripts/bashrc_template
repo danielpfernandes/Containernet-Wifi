@@ -1,7 +1,9 @@
+#!/bin/bash
 # some more ls aliases
 alias sawcheck_curl_blocks='curl http://localhost:8008/blocks'
 alias sawcheck_curl_peers='curl http://localhost:8008/peers'
 alias sawcheck_pbft_members='sawtooth settings list --filter sawtooth.consensus.pbft.members'
+alias sawcheck_poet_members='sawtooth settings list --filter sawtooth.consensus.poet.members'
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like

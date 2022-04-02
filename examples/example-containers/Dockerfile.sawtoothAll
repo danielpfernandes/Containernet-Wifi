@@ -24,13 +24,14 @@ RUN pip install pandas
 RUN apt install sudo
 RUN apt-get install systemd -y
 RUN mkdir /data
-RUN mkdir /pbft-shared
+RUN mkdir /poet-shared
 RUN pip install pyzmq
 RUN apt install curl -y
 COPY rest/* /rest/
 COPY sawtooth_scripts/* /sawtooth_scripts/
 COPY sawtooth_scripts/bashrc_template /root/.bash_aliases
 RUN chmod +x /sawtooth_scripts/*
+RUN chown sawtooth:sawtooth /var/lib/sawtooth
 
 EXPOSE 4004
 EXPOSE 8008
