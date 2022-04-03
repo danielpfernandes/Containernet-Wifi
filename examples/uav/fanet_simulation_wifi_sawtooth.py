@@ -5,6 +5,7 @@ This is the most simple example to showcase Containernet.
 
 import os
 import subprocess
+import sys
 import time
 
 from mininet.cli import CLI
@@ -14,22 +15,23 @@ from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.term import makeTerm
 from mn_wifi.link import adhoc
-from fanet_utils import get_sawtooth_destination, initialize_sawtooth, kill_process, set_sawtooth_destination, set_rest_location, setup_network
+from fanet_utils import get_sawtooth_destination, initialize_sawtooth, \
+    kill_process, set_sawtooth_destination, set_rest_location, setup_network
 
 
-def topology():
+def simulate(iterations_count: int = 30,
+             wait_time_in_seconds: int = 5,
+             skip_cli = False):
+    
+    iterations_count = int(iterations_count)
+    wait_time_in_seconds = int(wait_time_in_seconds)
     setLogLevel('info')
     ports = [4004, 8008, 8800, 5050, 3030, 5000]
     docker_image = "containernet_example:sawtoothAll"
-    shared_volume = "/tmp/poet-shared:/poet-shared"
+    os.system('cd examples/example-containers && ./build.sh')
 
     net = Containernet()
     
-    info('*** Cleaning up running processes\n')
-    os.system('docker container rm grafana cadvisor mn.drone1 mn.drone2 mn.drone3 mn.drone4 mn.drone5 mn.base1 mn.base2 --force')
-    os.system('rm -rf /tmp/poet-shared')
-    os.system('cd examples/example-containers && ./build.sh')
-
     info('*** Starting monitors\n')
     grafana = subprocess.Popen(
         ["sh", "start_monitor.sh"], stdout=subprocess.PIPE)
@@ -54,8 +56,7 @@ def topology():
                         cls=DockerSta,
                         dimage=docker_image,
                         ports=ports,
-                        volumes=[#"/tmp/drone1/root:/root",
-                                 "/tmp/drone1/data:/data"],
+                        volumes=["/tmp/drone1/data:/data"],
                         mem_limit=3900182016,
                         cpu_shares=5,
                         cpu_period=50000,
@@ -69,8 +70,7 @@ def topology():
                         cls=DockerSta,
                         dimage=docker_image,
                         ports=ports,
-                        volumes=[#"/tmp/drone2/root:/root",
-                                 "/tmp/drone2/data:/data"],
+                        volumes=["/tmp/drone2/data:/data"],
                         mem_limit=958182016,
                         cpu_shares=2,
                         cpu_period=50000,
@@ -84,8 +84,7 @@ def topology():
                         cls=DockerSta,
                         dimage=docker_image,
                         ports=ports,
-                        volumes=[#"/tmp/drone3/root:/root",
-                                 "/tmp/drone3/data:/data"],
+                        volumes=["/tmp/drone3/data:/data"],
                         mem_limit=3900182016,
                         cpu_shares=5,
                         cpu_period=50000,
@@ -99,8 +98,7 @@ def topology():
                         cls=DockerSta,
                         dimage=docker_image,
                         ports=ports,
-                        volumes=[#"/tmp/drone4/root:/root",
-                                 "/tmp/drone4/data:/data"],
+                        volumes=["/tmp/drone4/data:/data"],
                         mem_limit=1900182016,
                         cpu_shares=5,
                         cpu_period=50000,
@@ -114,8 +112,7 @@ def topology():
                         cls=DockerSta,
                         dimage=docker_image,
                         ports=ports,
-                        volumes=[#"/tmp/drone5/root:/root",
-                                 "/tmp/drone5/data:/data"],
+                        volumes=["/tmp/drone5/data:/data"],
                         mem_limit=3900182016,
                         cpu_shares=10,
                         cpu_period=50000,
@@ -125,10 +122,10 @@ def topology():
     setup_network(net, bs1, d1, d2, d3, d4, d5)
 
     info('\n*** Starting Sawtooth on the Base Station ***\n')
-    initialize_sawtooth(True, 0, True, bs1)
+    initialize_sawtooth(False, 0, False, bs1)
 
     info('\n*** Starting Sawtooth on the Drones ***\n')
-    initialize_sawtooth(True, 0, True, d1, d2, d3, d4)
+    initialize_sawtooth(False, 0, False, d1, d2, d3, d4)
 
     
     info('\n*** Start drone terminals\n')
@@ -143,20 +140,39 @@ def topology():
     # info("\n*** Configure the node position\n")
     # setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
     # os.system(setNodePosition)
-
-    info(
-        "\n*** Scenario 6: BS1 sends the new coordinates and the Sawtooth network validates the update of the information\n")
-    set_sawtooth_destination(bs1, 66, 66, 66)
-
-    info(
-        "\n*** Scenario 7: Drone 3 need to rearrange the coordinates and the Sawtooth network validates the update of the information\n")
-    set_sawtooth_destination(d3, 77, 77, 77)
-
-    info("\n*** Scenario 8: A compromised Drone in the FANET tries to send a false destination update command to the other UAVs using the unprotected REST Interface, without the possibility to validate the information with the BS1\n")
-    set_rest_location(d4, iterations=5, interval=5, target='10.0.0.249', coordinates='88 88 88')
     
-    info("\n*** Scenario 9: BS1 validator is faulty and a compromised base station joins the network tries to change the destination coordinates\n")
-    bs1.terminate()
+    # Common variables
+    sc06_coord = '06'
+    sc07_coord = '07'
+    sc08_coord = '08 08 08'
+    sc09_coord = '09 09 09'
+    sc10_coord = '10'
+
+    info(
+        "\n*** Scenario 6: BS1 sends the new coordinates and the Sawtooth"\
+            " network validates the update of the information\n")
+    set_sawtooth_destination(bs1, sc06_coord, sc06_coord, sc06_coord)
+    time.sleep(iterations_count * wait_time_in_seconds)
+
+    info(
+        "\n*** Scenario 7: Drone 3 need to rearrange the coordinates and"\
+            " the Sawtooth network validates the update of the information\n")
+    set_sawtooth_destination(d3, sc07_coord, sc07_coord, sc07_coord)
+    time.sleep(iterations_count * wait_time_in_seconds)
+
+    info("\n*** Scenario 8: A compromised Drone in the FANET tries to send"\
+        " a false destination update command to the other UAVs using the"\
+            " unprotected REST Interface, without the possibility to"\
+                " validate the information with the BS1\n")
+    set_rest_location(d5,
+                      iterations=iterations_count,
+                      interval=wait_time_in_seconds,
+                      target='10.0.0.249',
+                      coordinates=sc08_coord)
+    
+    info("\n*** Scenario 9: BS1 validator is faulty and a compromised base" \
+        " station joins the network tries to change the destination coordinates\n")
+    os.system('docker container rm mn.base1 --force')
     bs2 = net.addStation('base2',
                          ip='10.0.0.101',
                          mac='00:00:00:00:00:00',
@@ -168,18 +184,27 @@ def topology():
                 ssid='adhocNet', proto='batman_adv',
                 mode='g', channel=5, ht_cap='HT40+')
     makeTerm(bs2, cmd="bash")
-    set_rest_location(bs2, iterations=5, interval=5,
-                 target='10.0.0.250', coordinates='99 99 99')
+    set_rest_location(bs2,
+                      iterations=iterations_count,
+                      interval=wait_time_in_seconds,
+                      target='10.0.0.250',
+                      coordinates=sc09_coord)
                  
-    time.sleep(5)
 
-    info("\n*** Scenario 10: The connection with BS1 is lost and Drone 2 has to rearrange its coordinates")
-    set_sawtooth_destination(d2, 10, 10, 10)
+    info("\n*** Scenario 10: The connection with BS1 is lost and Drone 2"\
+        " has to rearrange its coordinates\n")
+    set_sawtooth_destination(d2, sc10_coord, sc10_coord, sc10_coord)
+    time.sleep(iterations_count * wait_time_in_seconds)
 
-    info(get_sawtooth_destination(d1))
+    info("\n Drone 1 registries:\n" + get_sawtooth_destination(d1))
+    info("\n Drone 2 registries:\n" + get_sawtooth_destination(d2))
+    info("\n Drone 3 registries:\n" + get_sawtooth_destination(d3))
+    info("\n Drone 4 registries:\n" + get_sawtooth_destination(d4))
+    info("\n Drone 5 registries:\n" + get_sawtooth_destination(d5))
 
-    info('\n*** Running CLI\n')
-    CLI(net)
+    if not skip_cli:
+        info('\n*** Running CLI\n')
+        CLI(net)
 
     info('\n*** Stopping network\n')
     kill_process()
@@ -191,4 +216,10 @@ if __name__ == '__main__':
     setLogLevel('info')
     # Killing old processes
     kill_process()
-    topology()
+    if len(sys.argv) == 3 and sys.argv[0] is not 'sudo':
+        skip_cli = True
+        print('iterations: ' + sys.argv[1])
+        print('wait time: ' + sys.argv[2])
+        simulate(sys.argv[1], sys.argv[2], skip_cli)
+    else:
+        simulate()

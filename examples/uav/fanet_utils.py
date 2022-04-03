@@ -66,7 +66,8 @@ def set_rest_location(
         iterations (int, optional): Numbers of iterations to run the command. Defaults to 10.
         interval (int, optional): Interval in seconds between each iteration. Defaults to 10.
         target (str, optional): Target node (drone). Defaults to '10.0.0.249'.
-        coordinates (str, optional): Coordinates in format <latitude> <longitude> <altitude>. Defaults to '0 0 0'.
+        coordinates (str, optional):
+            Coordinates in format <latitude> <longitude> <altitude>. Defaults to '0 0 0'.
     """
     for number in range(iterations):
         station.cmd('python /rest/setLocation.py '
@@ -152,7 +153,8 @@ def start_transaction_processors(node: any,
 
     Args:
         node (any): Mininet node
-        should_open_terminal (bool, optional): If True, opens a new terminal for each processor. Defaults to False.
+        should_open_terminal (bool, optional):
+            If True, opens a new terminal for each processor. Defaults to False.
         wait_time_in_seconds (int, optional): Wait time in seconds before leaving the command
         keep_terminal_alive (bool, optional): Leave the terminal open if it fails
     """
@@ -181,7 +183,8 @@ def start_transaction_processors(node: any,
                                 ' Intkey Transaction Processor', cmd=command_intkey_tp)
         time.sleep(wait_time_in_seconds)
         makeTerm(node=node, title=station_name +
-                                ' PoET Validator Registry Transaction Processor', cmd=command_poet_validator_registry_tp)
+                                ' PoET Validator Registry Transaction Processor',
+                                cmd=command_poet_validator_registry_tp)
     else:
         node.cmd(command_settings_tp + ' &')
         time.sleep(wait_time_in_seconds)
@@ -213,12 +216,8 @@ def start_consensus_mechanism(node: any,
             command += cmd_keep_alive
         makeTerm(node=node, title=station_name +
                                 ' Consensus Mechanism', cmd=command + cmd_keep_alive)
-        time.sleep(3)
-        #node.cmd('sudo chown sawtooth:sawtooth /var/lib/sawtooth/*')
     else:
         node.cmd(command + ' &')
-        time.sleep(3)
-        #node.cmd('sudo chown sawtooth:sawtooth /var/lib/sawtooth/*')
 
 
 def set_sawtooth_destination(node: any, 
@@ -256,3 +255,6 @@ def kill_process():
     os.system('pkill -9 -f setNodePosition.py')
     os.system('rm examples/uav/data/*')
     os.system('rm -rf /tmp/poet-shared')
+    os.system('docker container rm grafana cadvisor mn.drone1 '\
+    'mn.drone2 mn.drone3 mn.drone4 mn.drone5 mn.base1 mn.base2 --force')
+    os.system('service docker restart')
