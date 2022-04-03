@@ -1,7 +1,7 @@
 import os
 import time
-from matplotlib import cm
 
+from datetime import datetime
 from mininet.log import info
 from mn_wifi.link import adhoc
 
@@ -9,6 +9,10 @@ from containernet.net import Containernet
 from containernet.term import makeTerm
 
 cmd_keep_alive = '; bash'
+
+
+def time_stamp() -> str:
+    return str(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%s'))
 
 
 def add_link(net: Containernet, node: any):
@@ -27,7 +31,7 @@ def setup_network(net: Containernet, *argv):
     for node in argv:
         add_link(net, node)
 
-    info('\n*** Starting network\n')
+    info(time_stamp() + '*** Starting network\n')
     net.build()
     net.start()
 
@@ -42,7 +46,7 @@ def setup_network(net: Containernet, *argv):
     # # set_socket_ip: localhost must be replaced by ip address
     # # of the network interface of your system
     # # The same must be done with socket_client.py
-    info('\n*** Starting Socket Server\n')
+    info(time_stamp() + '*** Starting Socket Server\n')
     net.socketServer(ip='127.0.0.1', port=12345)
 
     # info("*** Starting CoppeliaSim\n")
@@ -103,12 +107,12 @@ def start_validator(node: any,
     station_name = str(node.name)
     command = 'bash /sawtooth_scripts/validator.sh ' + station_name
 
-    info('\n*** Generating sawtooth keypair for ' + station_name + ' ***\n')
+    info(time_stamp() + '*** Generating sawtooth keypair for ' + station_name + ' ***\n')
 
     if station_name is 'base1':
-        info('\n*** Create the Genesis Block on Base Station\n')
-        info('\n*** Create a batch to initialize the consensus settings on the Base Station\n')
-        info('\n*** Combining batches in one genesis batch on Base Station ***\n')
+        info(time_stamp() + '*** Create the Genesis Block on Base Station\n')
+        info(time_stamp() + '*** Create a batch to initialize the consensus settings on the Base Station\n')
+        info(time_stamp() + '*** Combining batches in one genesis batch on Base Station ***\n')
 
     if should_open_terminal:
         if keep_terminal_alive:
@@ -135,7 +139,7 @@ def start_rest_api(node: any,
     station_ip = str(node.params.get('ip'))
     command = 'sudo -u sawtooth sawtooth-rest-api -v --connect tcp://' + station_ip + ':4004'
 
-    info('\n*** Start REST API for ' + station_name + ' ***\n')
+    info(time_stamp() + '*** Start REST API for ' + station_name + ' ***\n')
 
     if should_open_terminal:
         if keep_terminal_alive:
@@ -168,7 +172,7 @@ def start_transaction_processors(node: any,
     command_poet_validator_registry_tp = 'sudo -u sawtooth poet-validator-registry-tp -v --connect tcp://' + \
                         station_ip + ':4004'
 
-    info('\n*** Start Transaction Processors for ' + station_name + ' ***\n')
+    info(time_stamp() + '*** Start Transaction Processors for ' + station_name + ' ***\n')
 
     if should_open_terminal:
         if keep_terminal_alive:
@@ -209,7 +213,7 @@ def start_consensus_mechanism(node: any,
     command = 'poet-engine -vv --connect tcp://localhost:5050 --component tcp://' + \
                         station_ip + ':4004'
 
-    info('\n*** Start Consensus Engine for ' + station_name + ' ***\n')
+    info(time_stamp() + '*** Start Consensus Engine for ' + station_name + ' ***\n')
 
     if should_open_terminal:
         if keep_terminal_alive:
