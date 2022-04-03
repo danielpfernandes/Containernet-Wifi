@@ -251,6 +251,7 @@ def get_sawtooth_destination(node: any) -> str:
 
 def kill_process():
     # os.system('pkill -9 -f coppeliaSim')
+    os.system('kill -TERM $(pgrep -f prometheus)')
     os.system('pkill -9 -f simpleTest.py')
     os.system('pkill -9 -f setNodePosition.py')
     os.system('rm examples/uav/data/*')
