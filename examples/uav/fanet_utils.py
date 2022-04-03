@@ -76,18 +76,19 @@ def set_rest_location(
         print("Iteration number " + str(number + 1) + " of " + str(iterations))
 
 
-def initialize_sawtooth(node: any, should_open_terminal=False, wait_time_in_seconds: int = 2,
-                        keep_terminal_alive=False):
-    start_validator(node, should_open_terminal,
-                    wait_time_in_seconds, keep_terminal_alive)
-    start_rest_api(node, should_open_terminal, keep_terminal_alive)
-    start_transaction_processors(
-        node, should_open_terminal, keep_terminal_alive)
-    start_consensus_mechanism(node, should_open_terminal, keep_terminal_alive)
-    time.sleep(wait_time_in_seconds)
+def initialize_sawtooth(should_open_terminal=False, wait_time_in_seconds: int = 0,
+                        keep_terminal_alive=False, *args):
+    for node in args:
+        start_validator(node, should_open_terminal,
+                        wait_time_in_seconds, keep_terminal_alive)
+        start_rest_api(node, should_open_terminal, keep_terminal_alive)
+        start_transaction_processors( node,
+            should_open_terminal, keep_terminal_alive)
+        start_consensus_mechanism(node, should_open_terminal, keep_terminal_alive)
 
 
-def start_validator(node: any, should_open_terminal: bool = False,
+def start_validator(node: any,
+                    should_open_terminal: bool = False,
                     wait_time_in_seconds: int = 2,
                     keep_terminal_alive=False):
     """Start the Validator
@@ -106,7 +107,7 @@ def start_validator(node: any, should_open_terminal: bool = False,
     if station_name is 'base1':
         info('\n*** Create the Genesis Block on Base Station\n')
         info('\n*** Create a batch to initialize the consensus settings on the Base Station\n')
-        info('\n*** Combining batches in one genesis bath on Base Station ***\n')
+        info('\n*** Combining batches in one genesis batch on Base Station ***\n')
 
     if should_open_terminal:
         if keep_terminal_alive:
@@ -118,7 +119,9 @@ def start_validator(node: any, should_open_terminal: bool = False,
         time.sleep(wait_time_in_seconds)
 
 
-def start_rest_api(node: any, should_open_terminal: bool = False, keep_terminal_alive=False):
+def start_rest_api(node: any,
+                   should_open_terminal: bool = False,
+                   keep_terminal_alive=False):
     """Start the REST API
 
     Args:
@@ -126,6 +129,7 @@ def start_rest_api(node: any, should_open_terminal: bool = False, keep_terminal_
         should_open_terminal (bool, optional): If True, opens a new terminal. Defaults to False.
         keep_terminal_alive (bool, optional): Leave the terminal open if it fails
     """
+
     station_name = str(node.name)
     station_ip = str(node.params.get('ip'))
     command = 'sudo -u sawtooth sawtooth-rest-api -v --connect tcp://' + station_ip + ':4004'
@@ -140,7 +144,9 @@ def start_rest_api(node: any, should_open_terminal: bool = False, keep_terminal_
         node.cmd(command + ' &')
 
 
-def start_transaction_processors(node: any, should_open_terminal: bool = False, wait_time_in_seconds: int = 5,
+def start_transaction_processors(node: any,
+                                 should_open_terminal: bool = False,
+                                 wait_time_in_seconds: int = 0,
                                  keep_terminal_alive=False):
     """Start the transaction processors
 
@@ -150,10 +156,11 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
         wait_time_in_seconds (int, optional): Wait time in seconds before leaving the command
         keep_terminal_alive (bool, optional): Leave the terminal open if it fails
     """
+
     station_name = str(node.name)
     station_ip = str(node.params.get('ip'))
     command_settings_tp = 'sudo -u sawtooth settings-tp -v --connect tcp://' + \
-                          station_ip + ':4004'
+                        station_ip + ':4004'
     command_intkey_tp = 'sudo -u sawtooth intkey-tp-python -v --connect tcp://' + \
                         station_ip + ':4004'
     command_poet_validator_registry_tp = 'sudo -u sawtooth poet-validator-registry-tp -v --connect tcp://' + \
@@ -168,13 +175,13 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
             command_poet_validator_registry_tp += cmd_keep_alive
 
         makeTerm(node=node, title=station_name +
-                                  ' Settings Transaction Processor', cmd=command_settings_tp)
+                                ' Settings Transaction Processor', cmd=command_settings_tp)
         time.sleep(wait_time_in_seconds)
         makeTerm(node=node, title=station_name +
-                                  ' Intkey Transaction Processor', cmd=command_intkey_tp)
+                                ' Intkey Transaction Processor', cmd=command_intkey_tp)
         time.sleep(wait_time_in_seconds)
         makeTerm(node=node, title=station_name +
-                                  ' PoET Validator Registry Transaction Processor', cmd=command_poet_validator_registry_tp)
+                                ' PoET Validator Registry Transaction Processor', cmd=command_poet_validator_registry_tp)
     else:
         node.cmd(command_settings_tp + ' &')
         time.sleep(wait_time_in_seconds)
@@ -183,7 +190,9 @@ def start_transaction_processors(node: any, should_open_terminal: bool = False, 
         node.cmd(command_poet_validator_registry_tp + ' &')
 
 
-def start_consensus_mechanism(node: any, should_open_terminal: bool = False, keep_terminal_alive=False):
+def start_consensus_mechanism(node: any,
+                              should_open_terminal: bool = False,
+                              keep_terminal_alive=False):
     """Start the consensus engine
 
     Args:
@@ -191,8 +200,11 @@ def start_consensus_mechanism(node: any, should_open_terminal: bool = False, kee
         should_open_terminal (bool, optional): If True, opens a new terminal. Defaults to False.
         keep_terminal_alive (bool, optional): Leave the terminal open if it fails
     """
+
     station_name = str(node.name)
-    command = 'sudo -u sawtooth poet-engine -vv --connect tcp://localhost:5050'
+    station_ip = str(node.params.get('ip'))
+    command = 'poet-engine -vv --connect tcp://localhost:5050 --component tcp://' + \
+                        station_ip + ':4004'
 
     info('\n*** Start Consensus Engine for ' + station_name + ' ***\n')
 
@@ -200,28 +212,19 @@ def start_consensus_mechanism(node: any, should_open_terminal: bool = False, kee
         if keep_terminal_alive:
             command += cmd_keep_alive
         makeTerm(node=node, title=station_name +
-                                  ' Consensus Mechanism', cmd=command + cmd_keep_alive)
+                                ' Consensus Mechanism', cmd=command + cmd_keep_alive)
+        time.sleep(3)
+        #node.cmd('sudo chown sawtooth:sawtooth /var/lib/sawtooth/*')
     else:
         node.cmd(command + ' &')
+        time.sleep(3)
+        #node.cmd('sudo chown sawtooth:sawtooth /var/lib/sawtooth/*')
 
 
-def generate_keypair(node: any) -> str:
-    """Create User and Validator keypair
-
-    Args:
-        node (any): Mininet node
-
-    Returns:
-        str: Validator public key
-    """
-
-    node.cmd("sawtooth keygen")
-    node.cmd("sawadm keygen")
-    key = node.cmd("cat /etc/sawtooth/keys/validator.pub")
-    return key.replace('\r\n', '')
-
-
-def set_sawtooth_destination(node: any, latitude: int, longitude: int, altitude: int):
+def set_sawtooth_destination(node: any, 
+                            latitude: int,
+                            longitude: int,
+                            altitude: int):
     """Sets the coordinates to the destination of the FANET
 
     Args:
