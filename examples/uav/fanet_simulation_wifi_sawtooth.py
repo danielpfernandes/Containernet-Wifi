@@ -15,7 +15,7 @@ from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.term import makeTerm
 from mn_wifi.link import adhoc
-from fanet_utils import get_sawtooth_destination, initialize_sawtooth, \
+from fanet_utils import get_sawtooth_destination, initialize_sawtooth, is_simulation_successful, \
     kill_process, set_sawtooth_destination, set_rest_location, setup_network, time_stamp
 
 
@@ -127,13 +127,13 @@ def simulate(iterations_count: int = 30,
     info(time_stamp() + '*** Starting Sawtooth on the Drones ***\n')
     initialize_sawtooth(False, 0, False, d1, d2, d3, d4)
 
-    
-    info(time_stamp() + '*** Start drone terminals\n')
-    makeTerm(bs1, cmd="bash")
-    makeTerm(d1, cmd="bash")
-    makeTerm(d2, cmd="bash")
-    makeTerm(d3, cmd="bash")
-    makeTerm(d4, cmd="bash")
+    if not skip_cli:
+        info(time_stamp() + '*** Start drone terminals\n')
+        makeTerm(bs1, cmd="bash")
+        makeTerm(d1, cmd="bash")
+        makeTerm(d2, cmd="bash")
+        makeTerm(d3, cmd="bash")
+        makeTerm(d4, cmd="bash")
 
     info(time_stamp() + '*** Waiting until the the Sawtooth peer connection\n')
     time.sleep(15)
@@ -194,12 +194,22 @@ def simulate(iterations_count: int = 30,
     set_sawtooth_destination(d2, sc10_coord, sc10_coord, sc10_coord)
     time.sleep(iterations_count * wait_time_in_seconds)
 
-    info(time_stamp() + " Drone 1 registries:\n" + get_sawtooth_destination(d1))
-    info(time_stamp() + " Drone 2 registries:\n" + get_sawtooth_destination(d2))
-    info(time_stamp() + " Drone 3 registries:\n" + get_sawtooth_destination(d3))
-    info(time_stamp() + " Drone 4 registries:\n" + get_sawtooth_destination(d4))
-    info(time_stamp() + " Drone 5 registries:\n" + get_sawtooth_destination(d5))
-
+    d1_destination = get_sawtooth_destination(d1)
+    d2_destination = get_sawtooth_destination(d2)
+    d3_destination = get_sawtooth_destination(d3)
+    d4_destination = get_sawtooth_destination(d4)
+    
+    info(time_stamp() + " Drone 1 registries:\n" + d1_destination)
+    info(time_stamp() + " Drone 2 registries:\n" + d2_destination)
+    info(time_stamp() + " Drone 3 registries:\n" + d3_destination)
+    info(time_stamp() + " Drone 4 registries:\n" + d4_destination)
+    
+    if is_simulation_successful(d1_destination, d2_destination, d3_destination, d4_destination):
+        info(time_stamp() + " ******************** SIMULATION SUCCESSFULL! ********************\n")
+        save_sawtooth_logs()
+    else:
+        info(time_stamp() + " ******************** SIMULATION FAILED! ********************\n")
+    
     if not skip_cli:
         info(time_stamp() + '*** Running CLI\n')
         CLI(net)
@@ -208,6 +218,9 @@ def simulate(iterations_count: int = 30,
     kill_process()
     net.stop()
     grafana.kill()
+    
+    def save_sawtooth_logs():
+        d1.cmd('mkdir /data/sawtooth/ && cp /var/log/sawtooth/* /data/sawtooth/')
 
 
 if __name__ == '__main__':

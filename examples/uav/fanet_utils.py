@@ -253,6 +253,26 @@ def get_sawtooth_destination(node: any) -> str:
     return node.cmd("cat /data/locations.log")
 
 
+def is_simulation_successful(*args) -> bool: 
+    sc06_expected = '60606'
+    sc07_expected = '70707'
+    sc10_expected = '101010'
+
+    
+    for result in args:
+        expected_result = sc06_expected in result
+        if result is False:
+            break
+        expected_result = sc07_expected in result
+        if result is False:
+            break
+        expected_result = sc10_expected in result
+        if result is False:
+            break
+    
+    return expected_result
+
+
 def kill_process():
     # os.system('pkill -9 -f coppeliaSim')
     os.system('kill -TERM $(pgrep -f prometheus)')
