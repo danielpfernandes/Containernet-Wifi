@@ -3,6 +3,7 @@
 This is the most simple example to showcase Containernet.
 """
 
+from multiprocessing.connection import wait
 import os
 import subprocess
 import sys
@@ -10,13 +11,13 @@ import time
 
 from mininet.cli import CLI
 from mininet.log import info, setLogLevel
-
+from mn_wifi.link import adhoc
 from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.term import makeTerm
-from mn_wifi.link import adhoc
-from fanet_utils import get_sawtooth_destination, initialize_sawtooth, is_simulation_successful, \
-    kill_process, set_sawtooth_destination, set_rest_location, setup_network, time_stamp
+
+from fanet_utils import get_sawtooth_destination, initialize_sawtooth, validate_scenario, kill_containers, \
+    kill_process, set_sawtooth_location, set_rest_location, setup_network, time_stamp
 
 
 def simulate(iterations_count: int = 30,
@@ -28,13 +29,16 @@ def simulate(iterations_count: int = 30,
     setLogLevel('info')
     ports = [4004, 8008, 8800, 5050, 3030, 5000]
     docker_image = "containernet_example:sawtoothAll"
+    
     os.system('cd examples/example-containers && ./build.sh')
-
-    net = Containernet()
     
     info( time_stamp() + '*** Starting monitors\n')
     grafana = subprocess.Popen(
         ["sh", "start_monitor.sh"], stdout=subprocess.PIPE)
+    
+    time.sleep(wait_time_in_seconds/2)
+
+    net = Containernet()
 
     info(time_stamp() + '*** Adding base station\n')
 
@@ -136,7 +140,7 @@ def simulate(iterations_count: int = 30,
         makeTerm(d4, cmd="bash")
 
     info(time_stamp() + '*** Waiting until the the Sawtooth peer connection\n')
-    time.sleep(15)
+    time.sleep(20)
     # info(time_stamp() + "*** Configure the node position\n")
     # setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
     # os.system(setNodePosition)
@@ -147,30 +151,58 @@ def simulate(iterations_count: int = 30,
     sc08_coord = '08 08 08'
     sc09_coord = '09 09 09'
     sc10_coord = '10'
-
+    expected_sc06 = '60606'
+    expected_sc07 = '70707'
+    expected_sc10 = '101010'
+    
+    ################################### SCENARIO 06 ###################################
     info(time_stamp() + "*** Scenario 6: BS1 sends the new coordinates and the Sawtooth"\
             " network validates the update of the information\n")
-    set_sawtooth_destination(bs1, sc06_coord, sc06_coord, sc06_coord)
-    time.sleep(iterations_count * wait_time_in_seconds)
-
+    set_sawtooth_location(bs1, sc06_coord, iterations=iterations_count, interval=wait_time_in_seconds)
+    validate_scenario(expected_sc06, get_destinations(d1, d2, d3, d4))
+        
+    ################################### SCENARIO 07 ###################################
     info(time_stamp() + "*** Scenario 7: Drone 3 need to rearrange the coordinates and"\
             " the Sawtooth network validates the update of the information\n")
-    set_sawtooth_destination(d3, sc07_coord, sc07_coord, sc07_coord)
-    time.sleep(iterations_count * wait_time_in_seconds)
+    set_sawtooth_location(d3, sc07_coord, iterations=iterations_count, interval=wait_time_in_seconds)
+    validate_scenario(expected_sc07, get_destinations(d1, d2, d3, d4))
 
+    ################################### SCENARIO 08 ###################################
     info(time_stamp() + "*** Scenario 8: A compromised Drone in the FANET tries to send"\
         " a false destination update command to the other UAVs using the"\
             " unprotected REST Interface, without the possibility to"\
                 " validate the information with the BS1\n")
-    set_rest_location(d5,
-                      iterations=iterations_count,
-                      interval=wait_time_in_seconds,
-                      target='10.0.0.249',
-                      coordinates=sc08_coord)
+    set_rest_location(d5, iterations_count, wait_time_in_seconds, target='10.0.0.249', coordinates=sc08_coord)
+    validate_scenario(expected_sc07, get_destinations(d1, d2, d3, d4))
     
+    ################################### SCENARIO 09 ###################################
     info(time_stamp() + "*** Scenario 9: BS1 validator is faulty and a compromised base" \
         " station joins the network tries to change the destination coordinates\n")
     os.system('docker container rm mn.base1 --force')
+    bs2 = start_bs2_station(net)
+    if not skip_cli:
+        makeTerm(bs2, cmd="bash")
+    set_rest_location(bs2, iterations_count, wait_time_in_seconds, '10.0.0.250', coordinates=sc09_coord)
+    validate_scenario(expected_sc07, get_destinations(d1, d2, d3, d4))
+
+    ################################### SCENARIO 10 ###################################
+    info(time_stamp() + "*** Scenario 10: The connection with BS1 is lost and Drone 2"\
+        " has to rearrange its coordinates\n")
+    set_sawtooth_location(d2, sc10_coord, iterations=iterations_count, interval=wait_time_in_seconds)
+    
+    validate_scenario(expected_sc10, get_destinations(d1, d2, d3, d4))
+    save_sawtooth_logs(d1, d2, d3, d4)
+    
+    if not skip_cli:
+        info(time_stamp() + '*** Running CLI\n')
+        CLI(net)
+
+    info(time_stamp() + '*** Stopping network\n')
+    kill_process()
+    net.stop()
+
+
+def start_bs2_station(net):
     bs2 = net.addStation('base2',
                          ip='10.0.0.101',
                          mac='00:00:00:00:00:00',
@@ -181,52 +213,25 @@ def simulate(iterations_count: int = 30,
     net.addLink(bs2, cls=adhoc, intf='base2-wlan0',
                 ssid='adhocNet', proto='batman_adv',
                 mode='g', channel=5, ht_cap='HT40+')
-    makeTerm(bs2, cmd="bash")
-    set_rest_location(bs2,
-                      iterations=iterations_count,
-                      interval=wait_time_in_seconds,
-                      target='10.0.0.250',
-                      coordinates=sc09_coord)
-                 
+                
+    return bs2
 
-    info(time_stamp() + "*** Scenario 10: The connection with BS1 is lost and Drone 2"\
-        " has to rearrange its coordinates\n")
-    set_sawtooth_destination(d2, sc10_coord, sc10_coord, sc10_coord)
-    time.sleep(iterations_count * wait_time_in_seconds)
+    
+def save_sawtooth_logs(*args):
+    for node in args:
+        node.cmd('mkdir /data/sawtooth/ && cp /var/log/sawtooth/* /data/sawtooth/')
 
-    d1_destination = get_sawtooth_destination(d1)
-    d2_destination = get_sawtooth_destination(d2)
-    d3_destination = get_sawtooth_destination(d3)
-    d4_destination = get_sawtooth_destination(d4)
     
-    info(time_stamp() + " Drone 1 registries:\n" + d1_destination)
-    info(time_stamp() + " Drone 2 registries:\n" + d2_destination)
-    info(time_stamp() + " Drone 3 registries:\n" + d3_destination)
-    info(time_stamp() + " Drone 4 registries:\n" + d4_destination)
-    
-    if is_simulation_successful(d1_destination, d2_destination, d3_destination, d4_destination):
-        info(time_stamp() + " ******************** SIMULATION SUCCESSFULL! ********************\n")
-        save_sawtooth_logs()
-    else:
-        info(time_stamp() + " ******************** SIMULATION FAILED! ********************\n")
-    
-    if not skip_cli:
-        info(time_stamp() + '*** Running CLI\n')
-        CLI(net)
-
-    info(time_stamp() + '*** Stopping network\n')
-    kill_process()
-    net.stop()
-    grafana.kill()
-    
-    def save_sawtooth_logs():
-        d1.cmd('mkdir /data/sawtooth/ && cp /var/log/sawtooth/* /data/sawtooth/')
+def get_destinations(d1, d2, d3, d4):
+    return get_sawtooth_destination(d1),get_sawtooth_destination(d2),get_sawtooth_destination(d3),get_sawtooth_destination(d4)
 
 
 if __name__ == '__main__':
     setLogLevel('info')
     # Killing old processes
     kill_process()
+    kill_containers()
+    
     if len(sys.argv) == 3 and sys.argv[0] is not 'sudo':
         skip_cli = True
         print('iterations: ' + sys.argv[1])

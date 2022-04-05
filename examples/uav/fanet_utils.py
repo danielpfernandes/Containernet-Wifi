@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 
 from datetime import datetime
@@ -78,7 +79,7 @@ def set_rest_location(
                     + target + ' '
                     + coordinates + ' True &')
         time.sleep(interval)
-        print("Iteration number " + str(number + 1) + " of " + str(iterations))
+        info(time_stamp() + " Iteration number " + str(number + 1) + " of " + str(iterations))
 
 
 def initialize_sawtooth(should_open_terminal=False, wait_time_in_seconds: int = 0,
@@ -224,10 +225,10 @@ def start_consensus_mechanism(node: any,
         node.cmd(command + ' &')
 
 
-def set_sawtooth_destination(node: any, 
-                            latitude: int,
-                            longitude: int,
-                            altitude: int):
+def set_sawtooth_location(station: any,
+                          coordinate: int,
+                          iterations=10,
+                          interval=10):
     """Sets the coordinates to the destination of the FANET
 
     Args:
@@ -236,7 +237,11 @@ def set_sawtooth_destination(node: any,
         longitude (int): Longitude
         altitude (int): Altitude
     """
-    node.cmd("intkey set " + str(time.time()) + " " + str(latitude) + str(longitude) + str(altitude))
+    for number in range(iterations):
+        station.cmd("intkey set " + str(time_stamp()) + " " + str(coordinate) + str(coordinate) + str(coordinate))
+        time.sleep(interval)
+        info(time_stamp() + " Iteration number " + str(number + 1) + " of " + str(iterations) + "\n")
+
 
 
 def get_sawtooth_destination(node: any) -> str:
@@ -253,24 +258,25 @@ def get_sawtooth_destination(node: any) -> str:
     return node.cmd("cat /data/locations.log")
 
 
-def is_simulation_successful(*args) -> bool: 
-    sc06_expected = '60606'
-    sc07_expected = '70707'
-    sc10_expected = '101010'
-
+def is_simulation_successful(expected_coord, *args) -> bool: 
     
     for result in args:
-        expected_result = sc06_expected in result
-        if result is False:
-            break
-        expected_result = sc07_expected in result
-        if result is False:
-            break
-        expected_result = sc10_expected in result
-        if result is False:
-            break
+        expected_result = expected_coord in result
+        if expected_result is False:
+            return expected_result
     
     return expected_result
+
+
+def validate_scenario(expected_coord, *args) -> bool:
+    for coord in args:
+        info('Node coordinates: ' + str(coord) + '\n')
+    if is_simulation_successful(expected_coord, *args):
+        info(time_stamp() + " ******************** SIMULATION SUCCESSFULL! ********************\n")
+    else:
+        info(time_stamp() + " ******************** SIMULATION FAILED! ********************\n")
+        kill_process()
+        sys.exit(1)
 
 
 def kill_process():
@@ -278,8 +284,11 @@ def kill_process():
     os.system('kill -TERM $(pgrep -f prometheus)')
     os.system('pkill -9 -f simpleTest.py')
     os.system('pkill -9 -f setNodePosition.py')
+    os.system('service docker restart')
+
+
+def kill_containers():
     os.system('rm examples/uav/data/*')
     os.system('rm -rf /tmp/poet-shared')
     os.system('docker container rm grafana cadvisor mn.drone1 '\
-    'mn.drone2 mn.drone3 mn.drone4 mn.drone5 mn.base1 mn.base2 --force')
-    os.system('service docker restart')
+        'mn.drone2 mn.drone3 mn.drone4 mn.drone5 mn.base1 mn.base2 --force')
