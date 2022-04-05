@@ -268,7 +268,7 @@ def is_simulation_successful(expected_coord, *args) -> bool:
     return expected_result
 
 
-def validate_scenario(expected_coord, *args) -> bool:
+def validate_scenario(net, expected_coord, *args) -> bool:
     for coord in args:
         info('Node coordinates: ' + str(coord) + '\n')
     if is_simulation_successful(expected_coord, *args):
@@ -276,6 +276,7 @@ def validate_scenario(expected_coord, *args) -> bool:
     else:
         info(time_stamp() + " ******************** SIMULATION FAILED! ********************\n")
         kill_process()
+        net.stop()
         sys.exit(1)
 
 

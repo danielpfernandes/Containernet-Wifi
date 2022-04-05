@@ -159,13 +159,13 @@ def simulate(iterations_count: int = 30,
     info(time_stamp() + "*** Scenario 6: BS1 sends the new coordinates and the Sawtooth"\
             " network validates the update of the information\n")
     set_sawtooth_location(bs1, sc06_coord, iterations=iterations_count, interval=wait_time_in_seconds)
-    validate_scenario(expected_sc06, get_destinations(d1, d2, d3, d4))
+    validate_scenario(net, expected_sc06, get_destinations(d1, d2, d3, d4))
         
     ################################### SCENARIO 07 ###################################
     info(time_stamp() + "*** Scenario 7: Drone 3 need to rearrange the coordinates and"\
             " the Sawtooth network validates the update of the information\n")
     set_sawtooth_location(d3, sc07_coord, iterations=iterations_count, interval=wait_time_in_seconds)
-    validate_scenario(expected_sc07, get_destinations(d1, d2, d3, d4))
+    validate_scenario(net, expected_sc07, get_destinations(d1, d2, d3, d4))
 
     ################################### SCENARIO 08 ###################################
     info(time_stamp() + "*** Scenario 8: A compromised Drone in the FANET tries to send"\
@@ -173,7 +173,7 @@ def simulate(iterations_count: int = 30,
             " unprotected REST Interface, without the possibility to"\
                 " validate the information with the BS1\n")
     set_rest_location(d5, iterations_count, wait_time_in_seconds, target='10.0.0.249', coordinates=sc08_coord)
-    validate_scenario(expected_sc07, get_destinations(d1, d2, d3, d4))
+    validate_scenario(net, expected_sc07, get_destinations(d1, d2, d3, d4))
     
     ################################### SCENARIO 09 ###################################
     info(time_stamp() + "*** Scenario 9: BS1 validator is faulty and a compromised base" \
@@ -183,14 +183,14 @@ def simulate(iterations_count: int = 30,
     if not skip_cli:
         makeTerm(bs2, cmd="bash")
     set_rest_location(bs2, iterations_count, wait_time_in_seconds, '10.0.0.250', coordinates=sc09_coord)
-    validate_scenario(expected_sc07, get_destinations(d1, d2, d3, d4))
+    validate_scenario(net, expected_sc07, get_destinations(d1, d2, d3, d4))
 
     ################################### SCENARIO 10 ###################################
     info(time_stamp() + "*** Scenario 10: The connection with BS1 is lost and Drone 2"\
         " has to rearrange its coordinates\n")
     set_sawtooth_location(d2, sc10_coord, iterations=iterations_count, interval=wait_time_in_seconds)
     
-    validate_scenario(expected_sc10, get_destinations(d1, d2, d3, d4))
+    validate_scenario(net, expected_sc10, get_destinations(d1, d2, d3, d4))
     save_sawtooth_logs(d1, d2, d3, d4)
     
     if not skip_cli:
