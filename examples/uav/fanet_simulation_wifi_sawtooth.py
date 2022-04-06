@@ -2,8 +2,6 @@
 """
 This is the most simple example to showcase Containernet.
 """
-
-from multiprocessing.connection import wait
 import os
 import subprocess
 import sys
@@ -20,12 +18,13 @@ from fanet_utils import get_sawtooth_destination, initialize_sawtooth, validate_
     kill_process, set_sawtooth_location, set_rest_location, setup_network, time_stamp
 
 
-def simulate(iterations_count: int = 30,
+def simulate(iterations_count: int = 5,
              wait_time_in_seconds: int = 5,
              skip_cli = False):
     
     iterations_count = int(iterations_count)
     wait_time_in_seconds = int(wait_time_in_seconds)
+    should_open_xterm = not skip_cli
     setLogLevel('info')
     ports = [4004, 8008, 8800, 5050, 3030, 5000]
     docker_image = "containernet_example:sawtoothAll"
@@ -126,10 +125,10 @@ def simulate(iterations_count: int = 30,
     setup_network(net, bs1, d1, d2, d3, d4, d5)
 
     info(time_stamp() + '*** Starting Sawtooth on the Base Station ***\n')
-    initialize_sawtooth(False, 0, False, bs1)
+    initialize_sawtooth(should_open_xterm, 0, should_open_xterm, bs1)
 
     info(time_stamp() + '*** Starting Sawtooth on the Drones ***\n')
-    initialize_sawtooth(False, 0, False, d1, d2, d3, d4)
+    initialize_sawtooth(should_open_xterm, 0, should_open_xterm, d1, d2, d3, d4)
 
     if not skip_cli:
         info(time_stamp() + '*** Start drone terminals\n')
@@ -140,7 +139,7 @@ def simulate(iterations_count: int = 30,
         makeTerm(d4, cmd="bash")
 
     info(time_stamp() + '*** Waiting until the the Sawtooth peer connection\n')
-    time.sleep(20)
+    time.sleep(60)
     # info(time_stamp() + "*** Configure the node position\n")
     # setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
     # os.system(setNodePosition)
@@ -188,9 +187,10 @@ def simulate(iterations_count: int = 30,
     ################################### SCENARIO 10 ###################################
     info(time_stamp() + "*** Scenario 10: The connection with BS1 is lost and Drone 2"\
         " has to rearrange its coordinates\n")
-    set_sawtooth_location(d2, sc10_coord, iterations=iterations_count, interval=wait_time_in_seconds)
-    
+    set_sawtooth_location(d2, sc10_coord, iterations=iterations_count, interval=wait_time_in_seconds)   
     validate_scenario(net, expected_sc10, get_destinations(d1, d2, d3, d4))
+    
+    info(time_stamp() + "*** Saving Drones logs at /tmp/drone/data/sawtooth/\n")
     save_sawtooth_logs(d1, d2, d3, d4)
     
     if not skip_cli:

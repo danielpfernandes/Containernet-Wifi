@@ -79,7 +79,7 @@ def set_rest_location(
                     + target + ' '
                     + coordinates + ' True &')
         time.sleep(interval)
-        info(time_stamp() + " Iteration number " + str(number + 1) + " of " + str(iterations))
+        info(time_stamp() + " Iteration number " + str(number + 1) + " of " + str(iterations) + "\n")
 
 
 def initialize_sawtooth(should_open_terminal=False, wait_time_in_seconds: int = 0,
@@ -238,7 +238,7 @@ def set_sawtooth_location(station: any,
         altitude (int): Altitude
     """
     for number in range(iterations):
-        station.cmd("intkey set " + str(time_stamp()) + " " + str(coordinate) + str(coordinate) + str(coordinate))
+        station.cmd("intkey set " + str(time.time()) + " " + str(coordinate) + str(coordinate) + str(coordinate))
         time.sleep(interval)
         info(time_stamp() + " Iteration number " + str(number + 1) + " of " + str(iterations) + "\n")
 
@@ -258,9 +258,9 @@ def get_sawtooth_destination(node: any) -> str:
     return node.cmd("cat /data/locations.log")
 
 
-def is_simulation_successful(expected_coord, *args) -> bool: 
+def is_simulation_successful(expected_coord, coordinates) -> bool: 
     
-    for result in args:
+    for result in coordinates:
         expected_result = expected_coord in result
         if expected_result is False:
             return expected_result
@@ -268,10 +268,10 @@ def is_simulation_successful(expected_coord, *args) -> bool:
     return expected_result
 
 
-def validate_scenario(net, expected_coord, *args) -> bool:
-    for coord in args:
-        info('Node coordinates: ' + str(coord) + '\n')
-    if is_simulation_successful(expected_coord, *args):
+def validate_scenario(net, expected_coord, coordinates) -> bool:
+    for coord in coordinates:
+        info('Node coordinates: \n' + str(coord) + '\n')
+    if is_simulation_successful(expected_coord, coordinates):
         info(time_stamp() + " ******************** SIMULATION SUCCESSFULL! ********************\n")
     else:
         info(time_stamp() + " ******************** SIMULATION FAILED! ********************\n")
