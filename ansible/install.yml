@@ -50,7 +50,8 @@
      pip: name=pexpect executable={{pip_path.stdout}}
 
    - name: build and install Containernet (using Mininet installer)
-     shell: containernet/util/install.sh -W
+     shell: Containernet-Wifi/util/install.sh -W
+     ignore_errors: yes
      args:
        chdir: ../../
 

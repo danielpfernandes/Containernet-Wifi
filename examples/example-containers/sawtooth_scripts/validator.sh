@@ -18,59 +18,73 @@ DRONE1_IP='10.0.0.249'
 DRONE2_IP='10.0.0.250'
 DRONE3_IP='10.0.0.251'
 DRONE4_IP='10.0.0.252'
+VALIDATOR_PRIV="/etc/sawtooth/keys/validator.priv"
 
 case $1 in
-base1)  IP=$BASE1_IP  VALIDATOR='0' PEERS="tcp://${DRONE1_IP}:8800,tcp://${DRONE2_IP}:8800,tcp://${DRONE3_IP},tcp://${DRONE4_IP}:8800";;
-drone1) IP=$DRONE1_IP VALIDATOR='1' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE2_IP}:8800,tcp://${DRONE3_IP},tcp://${DRONE4_IP}:8800";;
-drone2) IP=$DRONE2_IP VALIDATOR='2' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE1_IP}:8800,tcp://${DRONE3_IP},tcp://${DRONE4_IP}:8800";;
-drone3) IP=$DRONE3_IP VALIDATOR='3' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE1_IP}:8800,tcp://${DRONE2_IP},tcp://${DRONE4_IP}:8800";;
-drone4) IP=$DRONE4_IP VALIDATOR='4' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE1_IP}:8800,tcp://${DRONE2_IP},tcp://${DRONE3_IP}:8800";;
+base1)  IP=$BASE1_IP VALIDATOR='0' PEERS="tcp://${DRONE1_IP}:8800,tcp://${DRONE2_IP}:8800,tcp://${DRONE3_IP}:8800,tcp://${DRONE4_IP}:8800";;
+drone1) IP=$DRONE1_IP VALIDATOR='1' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE2_IP}:8800,tcp://${DRONE3_IP}:8800,tcp://${DRONE4_IP}:8800";;
+drone2) IP=$DRONE2_IP VALIDATOR='2' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE1_IP}:8800,tcp://${DRONE3_IP}:8800,tcp://${DRONE4_IP}:8800";;
+drone3) IP=$DRONE3_IP VALIDATOR='3' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE1_IP}:8800,tcp://${DRONE2_IP}:8800,tcp://${DRONE4_IP}:8800";;
+drone4) IP=$DRONE4_IP VALIDATOR='4' PEERS="tcp://${BASE1_IP}:8800,tcp://${DRONE1_IP}:8800,tcp://${DRONE2_IP}:8800,tcp://${DRONE3_IP}:8800";;
 *) echo "Invalid option";;
 esac 
 
-if [ -e /pbft-shared/validators/validator-${VALIDATOR}.priv ]; then
-    cp /pbft-shared/validators/validator-0.pub /etc/sawtooth/keys/validator.pub
-    cp /pbft-shared/validators/validator-0.priv /etc/sawtooth/keys/validator.priv
-fi &&
-if [ ! -e /etc/sawtooth/keys/validator.priv ]; then
-    sawadm keygen
-    mkdir -p /pbft-shared/validators || true
-    cp /etc/sawtooth/keys/validator.pub /pbft-shared/validators/validator-${VALIDATOR}.pub
-    cp /etc/sawtooth/keys/validator.priv /pbft-shared/validators/validator-${VALIDATOR}.priv
-fi &&
-if [ ! -e config-genesis.batch ]; then
-    sawset genesis -k /etc/sawtooth/keys/validator.priv -o /tmp/config-genesis.batch
-fi &&
-if [ $VALIDATOR = '0' ]; then
-    while [[ ! -f /pbft-shared/validators/validator-1.pub || \
-                ! -f /pbft-shared/validators/validator-2.pub || \
-                ! -f /pbft-shared/validators/validator-3.pub || \
-                ! -f /pbft-shared/validators/validator-4.pub ]];
-    do sleep 1; done
-    PBFT_MEMBERS=$(echo ['"'$(cat /pbft-shared/validators/validator-0.pub)'"','"'$(cat /pbft-shared/validators/validator-1.pub)'"','"'$(cat /pbft-shared/validators/validator-2.pub)'"','"'$(cat /pbft-shared/validators/validator-3.pub)'"','"'$(cat /pbft-shared/validators/validator-4.pub)'"'])
-    if [ ! -e /tmp/config.batch ]; then
-        sawset proposal create \
-        -k /etc/sawtooth/keys/validator.priv \
-        sawtooth.consensus.algorithm.name=pbft \
-        sawtooth.consensus.algorithm.version=1.0 \
-        sawtooth.consensus.pbft.members="${PBFT_MEMBERS}" \
-        -o /tmp/config.batch
-    fi &&
-    if [ ! -e /var/lib/sawtooth/genesis.batch ]; then
-        sawadm genesis /tmp/config-genesis.batch /tmp/config.batch
-    fi
-fi &&
-if [ ! -e /root/.sawtooth/keys/root.priv ]; then
-    sawtooth keygen root
-fi &&
-sawtooth-validator -vv \
+    sawadm keygen --force &&
+
+if [ $VALIDATOR = '0' ];
+    then
+    poet enclave measurement > poet-enclave-measurement &&
+    poet enclave basename > poet-enclave-basename &&
+    cp /etc/sawtooth/simulator_rk_pub.pem / &&
+    poet registration create -k $VALIDATOR_PRIV -o poet.batch &&
+
+    sawset genesis -k $VALIDATOR_PRIV -o config-genesis.batch &&
+    
+    sawset proposal create --key $VALIDATOR_PRIV \
+        -o config-consensus.batch \
+        sawtooth.consensus.algorithm.name=PoET \
+        sawtooth.consensus.algorithm.version=0.1 \
+        sawtooth.poet.report_public_key_pem="$(cat simulator_rk_pub.pem)" \
+        sawtooth.poet.valid_enclave_measurements=$(cat poet-enclave-measurement) \
+        sawtooth.poet.valid_enclave_basenames=$(cat poet-enclave-basename) &&
+    
+    sawset proposal create --key $VALIDATOR_PRIV \
+        -o poet-settings.batch \
+        sawtooth.poet.target_wait_time=5 \
+        sawtooth.poet.initial_wait_time=60 \
+        sawtooth.poet.ztest_minimum_win_count=999999999 \
+        sawtooth.publisher.max_batches_per_block=100 &&
+
+    sawadm genesis config-genesis.batch config-consensus.batch poet.batch poet-settings.batch
+
+    sawtooth keygen root --force &&
+    sawtooth-validator -vv \
     --endpoint tcp://${IP}:8800 \
     --bind network:tcp://${IP}:8800 \
     --bind component:tcp://${IP}:4004 \
-    --peers $PEERS
+    --peering dynamic \
+    --peers $PEERS \
+    --seeds $PEERS \
+    --network-auth trust
+
+else
+
+    sawtooth keygen root --force &&
+    sawtooth-validator -vv \
+    --endpoint tcp://${IP}:8800 \
+    --bind network:tcp://${IP}:8800 \
+    --bind component:tcp://${IP}:4004 \
+    --peering dynamic \
+    --peers $PEERS \
+    --seeds $PEERS \
+    --network-auth trust
+
+##### Other options
 #    --bind component:tcp://127.0.0.1:4004 \
 #    --bind consensus:tcp://127.0.0.1:5050 \
 #    --bind network:tcp://127.0.0.1:8800 \
 #    --scheduler parallel \
 #    --peering static \
 #    --maximum-peer-connectivity 10000 \
+
+fi

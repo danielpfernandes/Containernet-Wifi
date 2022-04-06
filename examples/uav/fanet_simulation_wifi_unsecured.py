@@ -14,19 +14,19 @@ from mn_wifi.link import adhoc
 from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.term import makeTerm
-from examples.uav.fanet_utils import set_location, setup_network
+from fanet_utils import kill_containers, set_rest_location, setup_network, time_stamp
 
 
-def topology():
+def simulate():
     setLogLevel('info')
 
     net = Containernet()
 
-    info('*** Starting monitors')
+    info(time_stamp() + '*** Starting monitors')
     grafana = subprocess.Popen(
         ["sh", "start_monitor.sh"], stdout=subprocess.PIPE)
 
-    info('\n*** Adding base station\n')
+    info(time_stamp() + '*** Adding base station\n')
     bs1 = net.addStation('base1',
                          ip='10.0.0.1',
                          mac='00:00:00:00:00:00',
@@ -35,7 +35,7 @@ def topology():
                          ports=[4004, 8008, 8800, 5050, 3030, 5000],
                          volumes=["/tmp/base1/data:/data"])
 
-    info('\n*** Adding docker drones\n')
+    info(time_stamp() + '*** Adding docker drones\n')
 
     # Intel Aero Ready to Fly Drone processor
     d1 = net.addStation('drone1',
@@ -114,17 +114,17 @@ def topology():
 
     setup_network(net, bs1, d1, d2, d3, d4, d5)
 
-    info('\n*** Starting REST server on drones\n')
+    info(time_stamp() + '*** Starting REST server on drones\n')
     d1.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
     d2.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
     d3.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
     d4.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
     d5.cmd('touch /data/locations.csv && python /rest/locationRestServer.py &')
 
-    info('\n*** Starting Validation REST server on base station\n')
+    info(time_stamp() + '*** Starting Validation REST server on base station\n')
     bs1.cmd('python /rest/locationRestServer.py &')
 
-    info('\n*** Start drone terminals\n')
+    info(time_stamp() + '*** Start drone terminals\n')
     makeTerm(bs1, cmd="bash")
     makeTerm(d1, cmd="tail -f /data/locations.csv")
     makeTerm(d2, cmd="tail -f /data/locations.csv")
@@ -134,29 +134,29 @@ def topology():
 
     time.sleep(5)
 
-    info("\n*** Configure the node position\n")
+    info(time_stamp() + "*** Configure the node position\n")
     # setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
     # os.system(setNodePosition)
 
-    info("\n*** Scenario 1: BS1 sends initial coordinates to Drone 5\n")
-    set_location(bs1, iterations=30, interval=5,
+    info(time_stamp() + "*** Scenario 1: BS1 sends initial coordinates to Drone 5\n")
+    set_rest_location(bs1, iterations=30, interval=5,
                  target='10.0.0.253', coordinates='11 11 11')
 
-    info("\n*** Scenario 2: BS1 changes the destination coordinates through Drone 2\n")
-    set_location(bs1, iterations=30, interval=5,
+    info(time_stamp() + "*** Scenario 2: BS1 changes the destination coordinates through Drone 2\n")
+    set_rest_location(bs1, iterations=30, interval=5,
                  target='10.0.0.250', coordinates='22 22 22')
 
-    info("\n*** Scenario 3: Drone 4 is compromised and  tries to change the destination coordinates\n")
-    set_location(d4, iterations=30, interval=5,
+    info(time_stamp() + "*** Scenario 3: Drone 4 is compromised and  tries to change the destination coordinates\n")
+    set_rest_location(d4, iterations=30, interval=5,
                  target='10.0.0.249', coordinates='33 33 33')
 
-    info("\n*** Scenario 4: Connection with the base station is lost and \
+    info(time_stamp() + "*** Scenario 4: Connection with the base station is lost and \
 the compromised drone tries to change the destination coordinates\n")
     bs1.cmd("pkill -9 -f /rest/locationRestServer.py &")
-    set_location(d4, iterations=30, interval=5,
+    set_rest_location(d4, iterations=30, interval=5,
                  target='10.0.0.250', coordinates='44 44 44')
 
-    info("\n*** Scenario 5: A compromised base station joins the network tries to change the destination coordinates\n")
+    info(time_stamp() + "*** Scenario 5: A compromised base station joins the network tries to change the destination coordinates\n")
     bs2 = net.addStation('base2',
                          ip='10.0.0.101',
                          mac='00:00:00:00:00:00',
@@ -168,13 +168,13 @@ the compromised drone tries to change the destination coordinates\n")
                 ssid='adhocNet', proto='batman_adv',
                 mode='g', channel=5, ht_cap='HT40+')
     makeTerm(bs2, cmd="bash")
-    set_location(bs2, iterations=30, interval=5,
+    set_rest_location(bs2, iterations=30, interval=5,
                  target='10.0.0.251', coordinates='55 55 55')
 
-    info('\n*** Running CLI\n')
+    info(time_stamp() + '*** Running CLI\n')
     CLI(net)
 
-    info('\n*** Stopping network')
+    info(time_stamp() + '*** Stopping network')
     kill_process()
     net.stop()
     grafana.kill()
@@ -191,4 +191,5 @@ if __name__ == '__main__':
     setLogLevel('info')
     # Killing old processes
     kill_process()
-    topology()
+    kill_containers()
+    simulate()
