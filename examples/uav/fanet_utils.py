@@ -282,14 +282,14 @@ def validate_scenario(net, expected_coord, coordinates) -> bool:
 
 def kill_process():
     # os.system('pkill -9 -f coppeliaSim')
-    os.system('kill -TERM $(pgrep -f prometheus)')
     os.system('pkill -9 -f simpleTest.py')
     os.system('pkill -9 -f setNodePosition.py')
-    os.system('service docker restart')
 
 
 def kill_containers():
+    os.system('kill -TERM $(pgrep -f prometheus)')
     os.system('rm examples/uav/data/*')
     os.system('rm -rf /tmp/poet-shared')
     os.system('docker container rm grafana cadvisor mn.drone1 '\
         'mn.drone2 mn.drone3 mn.drone4 mn.drone5 mn.base1 mn.base2 --force')
+    os.system('service docker restart')
