@@ -1,0 +1,254 @@
+Result Graphs:    https://snapshots-origin.grafana.net/dashboard/snapshot/a7xV9ReV609xDMdTPf45W0qOHnjw9i5g?orgId=2
+(Local snapshot): http://localhost:3000/dashboard/snapshot/KvaLce9JxhkV1TIRsI5DhftfPdQHdkAV
+
+ubuntu@ubuntu-Virtual-Machine:~/Repos/Containernet-Wifi$ sudo python examples/uav/fanet_simulation_wifi_unsecured.py 
+rm: cannot remove 'examples/uav/data/*': No such file or directory
+rm: cannot remove 'examples/uav/data/*': No such file or directory
+grafana
+cadvisor
+Error: No such container: mn.drone1
+Error: No such container: mn.drone2
+Error: No such container: mn.drone3
+Error: No such container: mn.drone4
+Error: No such container: mn.drone5
+Error: No such container: mn.base1
+Error: No such container: mn.base2
+2022-04-06T06:39:49.1649237989*** Starting monitors2022-04-06T06:39:49.1649237989*** Adding base station
+base1: kwargs {'ip': '10.0.0.1', 'ip6': '2001:0:0:0:0:0:0:1/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:00', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/base1/data:/data']}
+base1: update resources {'cpu_quota': -1}
+2022-04-06T06:39:50.1649237990*** Adding docker drones
+ts=2022-04-06T09:39:50.590Z caller=main.go:479 level=info msg="No time or size retention was set so using the default time retention" duration=15d
+ts=2022-04-06T09:39:50.590Z caller=main.go:516 level=info msg="Starting Prometheus" version="(version=2.34.0, branch=HEAD, revision=881111fec4332c33094a6fb2680c71fffc427275)"
+ts=2022-04-06T09:39:50.590Z caller=main.go:521 level=info build_context="(go=go1.17.8, user=root@121ad7ea5487, date=20220315-15:18:00)"
+ts=2022-04-06T09:39:50.590Z caller=main.go:522 level=info host_details="(Linux 5.4.0-107-generic #121~18.04.1-Ubuntu SMP Thu Mar 24 17:21:33 UTC 2022 x86_64 ubuntu-Virtual-Machine (none))"
+ts=2022-04-06T09:39:50.590Z caller=main.go:523 level=info fd_limits="(soft=16384, hard=16384)"
+ts=2022-04-06T09:39:50.590Z caller=main.go:524 level=info vm_limits="(soft=unlimited, hard=unlimited)"
+ts=2022-04-06T09:39:50.592Z caller=web.go:540 level=info component=web msg="Start listening for connections" address=0.0.0.0:9090
+ts=2022-04-06T09:39:50.593Z caller=main.go:937 level=info msg="Starting TSDB ..."
+ts=2022-04-06T09:39:50.593Z caller=repair.go:57 level=info component=tsdb msg="Found healthy block" mint=1648837684816 maxt=1648886400000 ulid=01FZP18BJD33F3RRAPCTK2E3YK
+ts=2022-04-06T09:39:50.593Z caller=repair.go:57 level=info component=tsdb msg="Found healthy block" mint=1648917754814 maxt=1648965600000 ulid=01FZQHAECA9C7ZNZNQTPNA47K5
+ts=2022-04-06T09:39:50.593Z caller=repair.go:57 level=info component=tsdb msg="Found healthy block" mint=1649110251022 maxt=1649116800000 ulid=01FZXVYCV4WDK4E9KSRGJMYRRP
+ts=2022-04-06T09:39:50.593Z caller=repair.go:57 level=info component=tsdb msg="Found healthy block" mint=1649196086021 maxt=1649203200000 ulid=01FZY684GFJ9N8GD05ZYYFAPSN
+ts=2022-04-06T09:39:50.593Z caller=repair.go:57 level=info component=tsdb msg="Found healthy block" mint=1648965604814 maxt=1649030400000 ulid=01FZY685C18M4DR9GQX4JN57Q9
+ts=2022-04-06T09:39:50.593Z caller=repair.go:57 level=info component=tsdb msg="Found healthy block" mint=1649203200000 maxt=1649210400000 ulid=01FZZ0PN6BGZVFPB8XXEW51YHZ
+ts=2022-04-06T09:39:50.597Z caller=tls_config.go:195 level=info component=web msg="TLS is disabled." http2=false
+ts=2022-04-06T09:39:50.605Z caller=head.go:493 level=info component=tsdb msg="Replaying on-disk memory mappable chunks if any"
+ts=2022-04-06T09:39:50.609Z caller=head.go:536 level=info component=tsdb msg="On-disk memory mappable chunks replay completed" duration=3.745553ms
+ts=2022-04-06T09:39:50.609Z caller=head.go:542 level=info component=tsdb msg="Replaying WAL, this may take a while"
+drone1: kwargs {'ip': '10.0.0.249', 'ip6': '2001:0:0:0:0:0:0:2/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:01', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/drone1/root:/root', '/tmp/drone1/data:/data'], 'mem_limit': 3900182016, 'cpu_shares': 5, 'cpu_period': 50000, 'cpu_quota': 10000, 'position': '30,60,10'}
+drone1: update resources {'cpu_quota': 10000, 'cpu_period': 50000, 'cpu_shares': 5, 'mem_limit': 3900182016}
+drone2: kwargs {'ip': '10.0.0.250', 'ip6': '2001:0:0:0:0:0:0:3/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:02', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/drone2/root:/root', '/tmp/drone2/data:/data'], 'mem_limit': 958182016, 'cpu_shares': 2, 'cpu_period': 50000, 'cpu_quota': 10000, 'position': '31,61,10'}
+drone2: update resources {'cpu_quota': 10000, 'cpu_period': 50000, 'cpu_shares': 2, 'mem_limit': 958182016}
+drone3: kwargs {'ip': '10.0.0.251', 'ip6': '2001:0:0:0:0:0:0:4/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:03', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/drone3/root:/root', '/tmp/drone3/data:/data'], 'mem_limit': 3900182016, 'cpu_shares': 5, 'cpu_period': 50000, 'cpu_quota': 10000, 'position': '50,50,10'}
+drone3: update resources {'cpu_quota': 10000, 'cpu_period': 50000, 'cpu_shares': 5, 'mem_limit': 3900182016}
+drone4: kwargs {'ip': '10.0.0.252', 'ip6': '2001:0:0:0:0:0:0:5/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:04', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/drone4/root:/root', '/tmp/drone4/data:/data'], 'mem_limit': 1900182016, 'cpu_shares': 5, 'cpu_period': 50000, 'cpu_quota': 10000, 'position': '60,20,10'}
+drone4: update resources {'cpu_quota': 10000, 'cpu_period': 50000, 'cpu_shares': 5, 'mem_limit': 1900182016}
+drone5: kwargs {'ip': '10.0.0.253', 'ip6': '2001:0:0:0:0:0:0:6/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:05', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/drone5/root:/root', '/tmp/drone5/data:/data'], 'mem_limit': 3900182016, 'cpu_shares': 10, 'cpu_period': 50000, 'cpu_quota': 10000, 'position': '20,60,10'}
+drone5: update resources {'cpu_quota': 10000, 'cpu_period': 50000, 'cpu_shares': 10, 'mem_limit': 3900182016}
+
+*** Configuring wifi nodes
+ts=2022-04-06T09:39:57.394Z caller=head_wal.go:337 level=warn component=tsdb msg="Unknown series references" samples=38575 exemplars=0
+ts=2022-04-06T09:39:57.394Z caller=head.go:578 level=info component=tsdb msg="WAL checkpoint loaded"
+ts=2022-04-06T09:39:57.482Z caller=head_wal.go:337 level=warn component=tsdb msg="Unknown series references" samples=211 exemplars=0
+ts=2022-04-06T09:39:57.482Z caller=head.go:613 level=info component=tsdb msg="WAL segment loaded" segment=98 maxSegment=101
+ts=2022-04-06T09:39:57.483Z caller=head.go:613 level=info component=tsdb msg="WAL segment loaded" segment=99 maxSegment=101
+ts=2022-04-06T09:39:57.604Z caller=head.go:613 level=info component=tsdb msg="WAL segment loaded" segment=100 maxSegment=101
+ts=2022-04-06T09:39:57.604Z caller=head.go:613 level=info component=tsdb msg="WAL segment loaded" segment=101 maxSegment=101
+ts=2022-04-06T09:39:57.604Z caller=head.go:619 level=info component=tsdb msg="WAL replay completed" checkpoint_replay_duration=6.785101839s wal_replay_duration=209.939065ms total_replay_duration=6.998926159s
+ts=2022-04-06T09:39:57.713Z caller=main.go:958 level=info fs_type=EXT4_SUPER_MAGIC
+ts=2022-04-06T09:39:57.713Z caller=main.go:961 level=info msg="TSDB started"
+ts=2022-04-06T09:39:57.713Z caller=main.go:1142 level=info msg="Loading configuration file" filename=prometheus.yml
+ts=2022-04-06T09:39:57.714Z caller=main.go:1179 level=info msg="Completed loading of configuration file" filename=prometheus.yml totalDuration=817.412µs db_storage=1.5µs remote_storage=1.8µs web_handler=700ns query_engine=1.6µs scrape=240.603µs scrape_sd=52.401µs notify=34.201µs notify_sd=12.4µs rules=1.6µs tracing=5.9µs
+ts=2022-04-06T09:39:57.714Z caller=main.go:910 level=info msg="Server is ready to receive web requests."
+2022-04-06T06:39:58.1649237998*** Starting network
+drone1 drone2 drone3 drone4 drone5 *** Starting controller(s)
+
+*** Starting L2 nodes
+
+2022-04-06T06:40:03.1649238003*** Starting Socket Server
+
+*** Perform a simple test
+2022-04-06T06:40:03.1649238003*** Starting REST server on drones
+2022-04-06T06:40:03.1649238003*** Starting Validation REST server on base station
+2022-04-06T06:40:03.1649238003*** Start drone terminals
+ts=2022-04-06T09:40:04.877Z caller=compact.go:510 level=info component=tsdb msg="write block resulted in empty block" mint=1649210400000 maxt=1649217600000 duration=50.821917ms
+ts=2022-04-06T09:40:04.891Z caller=head.go:840 level=info component=tsdb msg="Head GC completed" duration=12.982783ms
+ts=2022-04-06T09:40:04.891Z caller=checkpoint.go:98 level=info component=tsdb msg="Creating checkpoint" from_segment=98 to_segment=99 mint=1649217600000
+ts=2022-04-06T09:40:05.123Z caller=head.go:1009 level=info component=tsdb msg="WAL checkpoint complete" first=98 last=99 duration=232.232576ms
+2022-04-06T06:40:09.1649238009*** Configure the node position
+2022-04-06T06:40:09.1649238009*** Scenario 1: BS1 sends initial coordinates to Drone 5
+2022-04-06T06:40:14.1649238014 Iteration number 1 of 30
+2022-04-06T06:40:19.1649238019 Iteration number 2 of 30
+2022-04-06T06:40:24.1649238024 Iteration number 3 of 30
+2022-04-06T06:40:29.1649238029 Iteration number 4 of 30
+2022-04-06T06:40:34.1649238034 Iteration number 5 of 30
+2022-04-06T06:40:39.1649238039 Iteration number 6 of 30
+2022-04-06T06:40:44.1649238044 Iteration number 7 of 30
+2022-04-06T06:40:49.1649238049 Iteration number 8 of 30
+2022-04-06T06:40:54.1649238054 Iteration number 9 of 30
+2022-04-06T06:40:59.1649238059 Iteration number 10 of 30
+2022-04-06T06:41:04.1649238064 Iteration number 11 of 30
+2022-04-06T06:41:09.1649238069 Iteration number 12 of 30
+2022-04-06T06:41:14.1649238074 Iteration number 13 of 30
+2022-04-06T06:41:19.1649238079 Iteration number 14 of 30
+2022-04-06T06:41:24.1649238084 Iteration number 15 of 30
+2022-04-06T06:41:29.1649238089 Iteration number 16 of 30
+2022-04-06T06:41:34.1649238094 Iteration number 17 of 30
+2022-04-06T06:41:39.1649238099 Iteration number 18 of 30
+2022-04-06T06:41:44.1649238104 Iteration number 19 of 30
+2022-04-06T06:41:49.1649238109 Iteration number 20 of 30
+2022-04-06T06:41:54.1649238114 Iteration number 21 of 30
+2022-04-06T06:41:59.1649238119 Iteration number 22 of 30
+2022-04-06T06:42:04.1649238124 Iteration number 23 of 30
+2022-04-06T06:42:09.1649238129 Iteration number 24 of 30
+2022-04-06T06:42:14.1649238134 Iteration number 25 of 30
+2022-04-06T06:42:19.1649238139 Iteration number 26 of 30
+2022-04-06T06:42:24.1649238144 Iteration number 27 of 30
+2022-04-06T06:42:29.1649238149 Iteration number 28 of 30
+2022-04-06T06:42:34.1649238154 Iteration number 29 of 30
+2022-04-06T06:42:39.1649238159 Iteration number 30 of 30
+2022-04-06T06:42:39.1649238159*** Scenario 2: BS1 changes the destination coordinates through Drone 2
+2022-04-06T06:42:44.1649238164 Iteration number 1 of 30
+2022-04-06T06:42:49.1649238169 Iteration number 2 of 30
+2022-04-06T06:42:54.1649238174 Iteration number 3 of 30
+2022-04-06T06:42:59.1649238179 Iteration number 4 of 30
+2022-04-06T06:43:04.1649238184 Iteration number 5 of 30
+2022-04-06T06:43:09.1649238189 Iteration number 6 of 30
+2022-04-06T06:43:14.1649238194 Iteration number 7 of 30
+2022-04-06T06:43:19.1649238199 Iteration number 8 of 30
+2022-04-06T06:43:24.1649238204 Iteration number 9 of 30
+2022-04-06T06:43:29.1649238209 Iteration number 10 of 30
+2022-04-06T06:43:34.1649238214 Iteration number 11 of 30
+2022-04-06T06:43:39.1649238219 Iteration number 12 of 30
+2022-04-06T06:43:44.1649238224 Iteration number 13 of 30
+2022-04-06T06:43:49.1649238229 Iteration number 14 of 30
+2022-04-06T06:43:54.1649238234 Iteration number 15 of 30
+2022-04-06T06:43:59.1649238239 Iteration number 16 of 30
+2022-04-06T06:44:04.1649238244 Iteration number 17 of 30
+2022-04-06T06:44:09.1649238249 Iteration number 18 of 30
+2022-04-06T06:44:14.1649238254 Iteration number 19 of 30
+2022-04-06T06:44:19.1649238259 Iteration number 20 of 30
+2022-04-06T06:44:24.1649238264 Iteration number 21 of 30
+2022-04-06T06:44:29.1649238269 Iteration number 22 of 30
+2022-04-06T06:44:34.1649238274 Iteration number 23 of 30
+2022-04-06T06:44:39.1649238279 Iteration number 24 of 30
+2022-04-06T06:44:44.1649238284 Iteration number 25 of 30
+2022-04-06T06:44:49.1649238289 Iteration number 26 of 30
+2022-04-06T06:44:54.1649238294 Iteration number 27 of 30
+2022-04-06T06:44:59.1649238299 Iteration number 28 of 30
+2022-04-06T06:45:04.1649238304 Iteration number 29 of 30
+2022-04-06T06:45:09.1649238309 Iteration number 30 of 30
+2022-04-06T06:45:09.1649238309*** Scenario 3: Drone 4 is compromised and  tries to change the destination coordinates
+2022-04-06T06:45:14.1649238314 Iteration number 1 of 30
+2022-04-06T06:45:19.1649238319 Iteration number 2 of 30
+2022-04-06T06:45:24.1649238324 Iteration number 3 of 30
+2022-04-06T06:45:29.1649238329 Iteration number 4 of 30
+2022-04-06T06:45:34.1649238334 Iteration number 5 of 30
+2022-04-06T06:45:39.1649238339 Iteration number 6 of 30
+2022-04-06T06:45:44.1649238344 Iteration number 7 of 30
+2022-04-06T06:45:49.1649238349 Iteration number 8 of 30
+2022-04-06T06:45:54.1649238354 Iteration number 9 of 30
+2022-04-06T06:45:59.1649238359 Iteration number 10 of 30
+2022-04-06T06:46:04.1649238364 Iteration number 11 of 30
+2022-04-06T06:46:09.1649238369 Iteration number 12 of 30
+2022-04-06T06:46:14.1649238374 Iteration number 13 of 30
+2022-04-06T06:46:19.1649238379 Iteration number 14 of 30
+2022-04-06T06:46:24.1649238384 Iteration number 15 of 30
+2022-04-06T06:46:29.1649238389 Iteration number 16 of 30
+2022-04-06T06:46:34.1649238394 Iteration number 17 of 30
+2022-04-06T06:46:39.1649238399 Iteration number 18 of 30
+2022-04-06T06:46:44.1649238404 Iteration number 19 of 30
+2022-04-06T06:46:49.1649238409 Iteration number 20 of 30
+2022-04-06T06:46:54.1649238414 Iteration number 21 of 30
+2022-04-06T06:46:59.1649238419 Iteration number 22 of 30
+2022-04-06T06:47:04.1649238424 Iteration number 23 of 30
+2022-04-06T06:47:09.1649238429 Iteration number 24 of 30
+2022-04-06T06:47:14.1649238434 Iteration number 25 of 30
+2022-04-06T06:47:19.1649238439 Iteration number 26 of 30
+2022-04-06T06:47:24.1649238444 Iteration number 27 of 30
+2022-04-06T06:47:29.1649238449 Iteration number 28 of 30
+2022-04-06T06:47:35.1649238455 Iteration number 29 of 30
+2022-04-06T06:47:40.1649238460 Iteration number 30 of 30
+2022-04-06T06:47:40.1649238460*** Scenario 4: Connection with the base station is lost and the compromised drone tries to change the destination coordinates
+2022-04-06T06:47:45.1649238465 Iteration number 1 of 30
+2022-04-06T06:47:50.1649238470 Iteration number 2 of 30
+2022-04-06T06:47:55.1649238475 Iteration number 3 of 30
+2022-04-06T06:48:00.1649238480 Iteration number 4 of 30
+2022-04-06T06:48:05.1649238485 Iteration number 5 of 30
+2022-04-06T06:48:10.1649238490 Iteration number 6 of 30
+2022-04-06T06:48:15.1649238495 Iteration number 7 of 30
+2022-04-06T06:48:20.1649238500 Iteration number 8 of 30
+2022-04-06T06:48:25.1649238505 Iteration number 9 of 30
+2022-04-06T06:48:30.1649238510 Iteration number 10 of 30
+2022-04-06T06:48:35.1649238515 Iteration number 11 of 30
+2022-04-06T06:48:40.1649238520 Iteration number 12 of 30
+2022-04-06T06:48:45.1649238525 Iteration number 13 of 30
+2022-04-06T06:48:50.1649238530 Iteration number 14 of 30
+2022-04-06T06:48:55.1649238535 Iteration number 15 of 30
+2022-04-06T06:49:00.1649238540 Iteration number 16 of 30
+2022-04-06T06:49:05.1649238545 Iteration number 17 of 30
+2022-04-06T06:49:10.1649238550 Iteration number 18 of 30
+2022-04-06T06:49:15.1649238555 Iteration number 19 of 30
+2022-04-06T06:49:20.1649238560 Iteration number 20 of 30
+2022-04-06T06:49:25.1649238565 Iteration number 21 of 30
+2022-04-06T06:49:30.1649238570 Iteration number 22 of 30
+2022-04-06T06:49:35.1649238575 Iteration number 23 of 30
+2022-04-06T06:49:40.1649238580 Iteration number 24 of 30
+2022-04-06T06:49:45.1649238585 Iteration number 25 of 30
+2022-04-06T06:49:50.1649238590 Iteration number 26 of 30
+2022-04-06T06:49:55.1649238595 Iteration number 27 of 30
+2022-04-06T06:50:00.1649238600 Iteration number 28 of 30
+2022-04-06T06:50:05.1649238605 Iteration number 29 of 30
+2022-04-06T06:50:10.1649238610 Iteration number 30 of 30
+2022-04-06T06:50:10.1649238610*** Scenario 5: A compromised base station joins the network tries to change the destination coordinates
+base2: kwargs {'ip': '10.0.0.101', 'ip6': '2001:0:0:0:0:0:0:7/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:00', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/base2:/root']}
+base2: update resources {'cpu_quota': -1}
+2022-04-06T06:50:17.1649238617 Iteration number 1 of 30
+2022-04-06T06:50:22.1649238622 Iteration number 2 of 30
+2022-04-06T06:50:27.1649238627 Iteration number 3 of 30
+2022-04-06T06:50:32.1649238632 Iteration number 4 of 30
+2022-04-06T06:50:37.1649238637 Iteration number 5 of 30
+2022-04-06T06:50:42.1649238642 Iteration number 6 of 30
+2022-04-06T06:50:47.1649238647 Iteration number 7 of 30
+2022-04-06T06:50:52.1649238652 Iteration number 8 of 30
+2022-04-06T06:50:57.1649238657 Iteration number 9 of 30
+2022-04-06T06:51:02.1649238662 Iteration number 10 of 30
+2022-04-06T06:51:07.1649238667 Iteration number 11 of 30
+2022-04-06T06:51:12.1649238672 Iteration number 12 of 30
+2022-04-06T06:51:17.1649238677 Iteration number 13 of 30
+2022-04-06T06:51:22.1649238682 Iteration number 14 of 30
+2022-04-06T06:51:27.1649238687 Iteration number 15 of 30
+2022-04-06T06:51:32.1649238692 Iteration number 16 of 30
+2022-04-06T06:51:37.1649238697 Iteration number 17 of 30
+2022-04-06T06:51:42.1649238702 Iteration number 18 of 30
+2022-04-06T06:51:47.1649238707 Iteration number 19 of 30
+2022-04-06T06:51:52.1649238712 Iteration number 20 of 30
+2022-04-06T06:51:57.1649238717 Iteration number 21 of 30
+2022-04-06T06:52:02.1649238722 Iteration number 22 of 30
+2022-04-06T06:52:07.1649238727 Iteration number 23 of 30
+2022-04-06T06:52:12.1649238732 Iteration number 24 of 30
+2022-04-06T06:52:17.1649238737 Iteration number 25 of 30
+2022-04-06T06:52:22.1649238742 Iteration number 26 of 30
+2022-04-06T06:52:27.1649238747 Iteration number 27 of 30
+2022-04-06T06:52:32.1649238752 Iteration number 28 of 30
+2022-04-06T06:52:37.1649238757 Iteration number 29 of 30
+2022-04-06T06:52:42.1649238762 Iteration number 30 of 30
+2022-04-06T06:52:42.1649238762*** Running CLI
+*** Starting CLI:
+mininet> exit
+2022-04-06T06:54:20.1649238860*** Stopping networkrm: cannot remove 'examples/uav/data/*': No such file or directory
+*** Removing NAT rules of 0 SAPs
+
+*** Stopping 0 controllers
+
+*** Stopping 6 links
+......
+*** Stopping 0 switches
+
+*** Stopping 7 hosts/stations
+base1 drone1 drone2 drone3 drone4 drone5 base2 
+*** Removing WiFi module and Configurations
+*** Killing mac80211_hwsim
+
+*** Done
+Killed

@@ -14,10 +14,10 @@ from mn_wifi.link import adhoc
 from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.term import makeTerm
-from examples.uav.fanet_utils import set_rest_location, setup_network, time_stamp
+from fanet_utils import kill_containers, set_rest_location, setup_network, time_stamp
 
 
-def topology():
+def simulate():
     setLogLevel('info')
 
     net = Containernet()
@@ -191,4 +191,5 @@ if __name__ == '__main__':
     setLogLevel('info')
     # Killing old processes
     kill_process()
-    topology()
+    kill_containers()
+    simulate()
