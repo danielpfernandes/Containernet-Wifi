@@ -135,7 +135,6 @@ def start_rest_api(node: any,
         should_open_terminal (bool, optional): If True, opens a new terminal. Defaults to False.
         keep_terminal_alive (bool, optional): Leave the terminal open if it fails
     """
-
     station_name = str(node.name)
     station_ip = str(node.params.get('ip'))
     command = 'sudo -u sawtooth sawtooth-rest-api -v --connect tcp://' + station_ip + ':4004'
