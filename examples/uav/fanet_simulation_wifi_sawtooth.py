@@ -14,7 +14,7 @@ from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.term import makeTerm
 
-from fanet_utils import get_sawtooth_destination, initialize_sawtooth, validate_scenario, kill_containers, \
+from fanet_utils import get_sawtooth_destination, initialize_sawtooth, save_logs_to_results, validate_scenario, kill_containers, \
     kill_process, set_sawtooth_location, set_rest_location, setup_network, time_stamp
 
 
@@ -145,53 +145,57 @@ def simulate(iterations_count: int = 5,
     # os.system(setNodePosition)
     
     # Common variables
-    sc06_coord = '06'
-    sc07_coord = '07'
-    sc08_coord = '08 08 08'
-    sc09_coord = '09 09 09'
-    sc10_coord = '10'
-    expected_sc06 = '60606'
-    expected_sc07 = '70707'
-    expected_sc10 = '101010'
+    sc06_coords = {'lat':'5001', 'long':'1001'}
+    sc07_coords = {'lat':'5002', 'long':'1002'}
+    sc08_coords = '5030 1030'
+    sc09_coords = {'lat':'5004', 'long':'1004'}
+    sc10_coords = '5050 1050'
+    expected_sc06 = '50011001'
+    expected_sc07 = '50021002'
+    expected_sc09 = '50041004'
     
     ################################### SCENARIO 06 ###################################
     info(time_stamp() + "*** Scenario 6: BS1 sends the new coordinates and the Sawtooth"\
             " network validates the update of the information\n")
-    set_sawtooth_location(bs1, sc06_coord, iterations=iterations_count, interval=wait_time_in_seconds)
+    info(time_stamp() + "*** Scenario 6 Expected: Coordinates set to 50011001101\n")
+    set_sawtooth_location(bs1, sc06_coords, iterations=iterations_count, interval=wait_time_in_seconds)
     validate_scenario(net, expected_sc06, get_destinations(d1, d2, d3, d4))
         
     ################################### SCENARIO 07 ###################################
-    info(time_stamp() + "*** Scenario 7: Drone 3 need to rearrange the coordinates and"\
-            " the Sawtooth network validates the update of the information\n")
-    set_sawtooth_location(d3, sc07_coord, iterations=iterations_count, interval=wait_time_in_seconds)
+    info(time_stamp() + "*** Scenario 7: BS1 sends changes the coordinates and the Sawtooth"\
+            " network validates the update of the information\n")
+    info(time_stamp() + "*** Scenario 7 Expected: Coordinates set to 50021002102\n")
+    set_sawtooth_location(bs1, sc07_coords, iterations=iterations_count, interval=wait_time_in_seconds)
     validate_scenario(net, expected_sc07, get_destinations(d1, d2, d3, d4))
 
     ################################### SCENARIO 08 ###################################
-    info(time_stamp() + "*** Scenario 8: A compromised Drone in the FANET tries to send"\
-        " a false destination update command to the other UAVs using the"\
-            " unprotected REST Interface, without the possibility to"\
-                " validate the information with the BS1\n")
-    set_rest_location(d5, iterations_count, wait_time_in_seconds, target='10.0.0.249', coordinates=sc08_coord)
+    info(time_stamp() + "*** Scenario 8: A  Drone 5 is compromised and tries to change the destination coordinates"\
+        "using the unprotected REST Interface\n")
+    info(time_stamp() + "*** Scenario 3 Expected: Coordinates keep to 50021002102 (Exploited if set to 50301030303)\n")
+    set_rest_location(d5, iterations_count, wait_time_in_seconds, target='10.0.0.249', coordinates=sc08_coords)
     validate_scenario(net, expected_sc07, get_destinations(d1, d2, d3, d4))
     
     ################################### SCENARIO 09 ###################################
-    info(time_stamp() + "*** Scenario 9: BS1 validator is faulty and a compromised base" \
-        " station joins the network tries to change the destination coordinates\n")
+    info(time_stamp() + "*** Scenario 9: Connection with the base station is lost and" \
+        "drone2 needs to rearrange the destination coordinates for emergency purposes\n")
+    info(time_stamp() + "*** Scenario 9 Expected: Coordinates keep to 50041004104\n")
     os.system('docker container rm mn.base1 --force')
+    set_sawtooth_location(d2, sc09_coords, iterations=iterations_count, interval=wait_time_in_seconds)   
+    validate_scenario(net, expected_sc09, get_destinations(d1, d2, d3, d4))
+
+    ################################### SCENARIO 10 ###################################
+    info(time_stamp() + "*** Scenario 10:  compromised base station joins the network tries to change the destination"\
+        " coordinates through the unsecure REST interface\n")
+    info(time_stamp() + "*** Scenario 3 Expected: Coordinates keep to 50041004104 (Exploited if set to 50501050505)\n")
     bs2 = start_bs2_station(net)
     if not skip_cli:
         makeTerm(bs2, cmd="bash")
-    set_rest_location(bs2, iterations_count, wait_time_in_seconds, '10.0.0.250', coordinates=sc09_coord)
+    set_rest_location(bs2, iterations_count, wait_time_in_seconds, '10.0.0.250', coordinates=sc10_coords)
     validate_scenario(net, expected_sc07, get_destinations(d1, d2, d3, d4))
-
-    ################################### SCENARIO 10 ###################################
-    info(time_stamp() + "*** Scenario 10: The connection with BS1 is lost and Drone 2"\
-        " has to rearrange its coordinates\n")
-    set_sawtooth_location(d2, sc10_coord, iterations=iterations_count, interval=wait_time_in_seconds)   
-    validate_scenario(net, expected_sc10, get_destinations(d1, d2, d3, d4))
     
     info(time_stamp() + "*** Saving Drones logs at /tmp/drone/data/sawtooth/\n")
     save_sawtooth_logs(d1, d2, d3, d4)
+    save_logs_to_results()
     
     if not skip_cli:
         info(time_stamp() + '*** Running CLI\n')

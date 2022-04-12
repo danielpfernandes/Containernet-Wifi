@@ -3,10 +3,11 @@ import subprocess
 import requests
 import logging
 import codecs
-import time
 import socket
 import pandas as pd
+
 from flask import Flask, json, request
+from datetime import datetime
 
 LOCATION_REST_SERVER_LOG_PATH = "/data/locationRestServer.log"
 LOCATION_DATA_CSV_PATH = '/data/locations.csv'
@@ -17,9 +18,11 @@ BASE_STATION_IP = '10.0.0.1'
 LOCALHOST_IP = '0.0.0.0'
 LATITUDE_KEY = 'latitude'
 LONGITUDE_KEY = 'longitude'
-ALTITUDE_KEY = 'altitude'
 TIMESTAMP_KEY = 'timestamp'
 
+
+def coord_time_stamp():
+    return str(datetime.now().strftime('%Y-%m-%dT%H-%M-%S'))
 
 # Places the log files into /data/ directory
 logging.basicConfig(filename=LOCATION_REST_SERVER_LOG_PATH,
@@ -27,12 +30,10 @@ logging.basicConfig(filename=LOCATION_REST_SERVER_LOG_PATH,
                     format="%(asctime)s %(name)s:%(levelname)s:%(message)s",
                     level=logging.DEBUG)
 
-locations = [{LATITUDE_KEY: 0, LONGITUDE_KEY: 0,
-              ALTITUDE_KEY: 0, TIMESTAMP_KEY: time.time()}]
+locations = [{TIMESTAMP_KEY: coord_time_stamp(), LATITUDE_KEY: 0, LONGITUDE_KEY: 0}]
 
 api = Flask(__name__)
 api.config['DEBUG'] = True
-
 
 def extract_ip():
     """
@@ -78,21 +79,19 @@ def propagate_message(new_coordinates):
         result = subprocess.Popen('setLocation.py '
                                   + drone_ip + ' '
                                   + new_coordinates[LATITUDE_KEY] + ' '
-                                  + new_coordinates[LONGITUDE_KEY] + ' '
-                                  + new_coordinates[ALTITUDE_KEY], shell=True, stdout=subprocess.PIPE)
+                                  + new_coordinates[LONGITUDE_KEY], shell=True, stdout=subprocess.PIPE)
         logging.debug(result)
 
 
 def compare_coordinates(reference_host, request_info):
     """
-    Compares the latitude, longitude and the altitude between the reference host and the request
+    Compares the latitude and longitude between the reference host and the request
         :param reference_host Reference host JSON files
         :param request_info Request content in JSON format
         Returns True if the values matches
     """
     return reference_host[LATITUDE_KEY] == request_info[LATITUDE_KEY] \
-        and reference_host[LONGITUDE_KEY] == request_info[LONGITUDE_KEY] \
-        and reference_host[ALTITUDE_KEY] == request_info[ALTITUDE_KEY]
+        and reference_host[LONGITUDE_KEY] == request_info[LONGITUDE_KEY]
 
 
 def validate_coordinates_with_base_station(request_json, base_station_url):

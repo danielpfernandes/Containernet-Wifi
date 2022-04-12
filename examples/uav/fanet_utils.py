@@ -15,6 +15,9 @@ cmd_keep_alive = '; bash'
 def time_stamp() -> str:
     return str(datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%s'))
 
+def coord_time_stamp() -> str:
+    return str(datetime.now().strftime('%Y-%m-%dT%H-%M-%S'))
+
 
 def add_link(net: Containernet, node: any):
     net.addLink(node, cls=adhoc, intf=str(node.name) + '-wlan0',
@@ -63,7 +66,7 @@ def setup_network(net: Containernet, *argv):
 
 
 def set_rest_location(
-        station: any, iterations=10, interval=10, target='10.0.0.249', coordinates='0 0 0'):
+        station: any, iterations=10, interval=10, target='10.0.0.249', coordinates='0 0'):
     """Set the drone location
 
     Args:
@@ -72,7 +75,7 @@ def set_rest_location(
         interval (int, optional): Interval in seconds between each iteration. Defaults to 10.
         target (str, optional): Target node (drone). Defaults to '10.0.0.249'.
         coordinates (str, optional):
-            Coordinates in format <latitude> <longitude> <altitude>. Defaults to '0 0 0'.
+            Coordinates in format <latitude> <longitude>. Defaults to '0 0'.
     """
     for number in range(iterations):
         station.cmd('python /rest/setLocation.py '
@@ -225,19 +228,19 @@ def start_consensus_mechanism(node: any,
 
 
 def set_sawtooth_location(station: any,
-                          coordinate: int,
-                          iterations=10,
-                          interval=10):
+                          coordinate: dict,
+                          iterations:int = 10,
+                          interval:int = 10):
     """Sets the coordinates to the destination of the FANET
 
     Args:
-        node (any): Mininet node
-        latitude (int): Latitude
-        longitude (int): Longitude
-        altitude (int): Altitude
+        station (any): Mininet node
+        coordinate (dict): Coordinates (Lat, Long)
+        iterations (int): Number of iterations
+        interval (int): Interval between iterations
     """
     for number in range(iterations):
-        station.cmd("intkey set " + str(time.time()) + " " + str(coordinate) + str(coordinate) + str(coordinate))
+        station.cmd("intkey set " + str(coord_time_stamp()) + " " + str(coordinate['lat']) + str(coordinate['long']))
         time.sleep(interval)
         info(time_stamp() + " Iteration number " + str(number + 1) + " of " + str(iterations) + "\n")
 
@@ -277,6 +280,11 @@ def validate_scenario(net, expected_coord, coordinates) -> bool:
         kill_process()
         net.stop()
         sys.exit(1)
+
+
+def save_logs_to_results(preffix_name: str = 'sim'):
+    os.system('chown -R $USER:$USER /tmp/drone* /tmp/base*')
+    os.system('zip -r results/'+ preffix_name + str(coord_time_stamp) +'.zip /tmp/drone* tmp/base*')
 
 
 def kill_process():
