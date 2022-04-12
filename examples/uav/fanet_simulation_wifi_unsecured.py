@@ -138,25 +138,30 @@ def simulate():
     # setNodePosition = 'python {}/setNodePosition.py '.format(path) + sta_drone_send + ' &'
     # os.system(setNodePosition)
 
-    info(time_stamp() + "*** Scenario 1: BS1 sends initial coordinates to Drone 5\n")
+    info(time_stamp() + "*** Scenario 1: BS1 sends initial coordinates to Drone 3\n")
+    info(time_stamp() + "*** Scenario 1 Expected: Coordinates set to 5001 1001\n")
     set_rest_location(bs1, iterations=30, interval=5,
-                 target='10.0.0.253', coordinates='11 11 11')
+                 target='10.0.0.251', coordinates=' 5001 1001')
 
     info(time_stamp() + "*** Scenario 2: BS1 changes the destination coordinates through Drone 2\n")
+    info(time_stamp() + "*** Scenario 2 Expected: Coordinates set to 5002 1002\n")
     set_rest_location(bs1, iterations=30, interval=5,
-                 target='10.0.0.250', coordinates='22 22 22')
+                 target='10.0.0.250', coordinates='5002 1002')
 
-    info(time_stamp() + "*** Scenario 3: Drone 4 is compromised and  tries to change the destination coordinates\n")
-    set_rest_location(d4, iterations=30, interval=5,
-                 target='10.0.0.249', coordinates='33 33 33')
+    info(time_stamp() + "*** Scenario 3: Drone 5 is compromised and tries to change the destination coordinates\n")
+    info(time_stamp() + "*** Scenario 3 Expected: Coordinates keep to 5002 1002 (Exploited if set to 5030 1030)\n")
+    set_rest_location(d5, iterations=30, interval=5,
+                 target='10.0.0.249', coordinates='5030 1030')
 
     info(time_stamp() + "*** Scenario 4: Connection with the base station is lost and \
 the compromised drone tries to change the destination coordinates\n")
+    info(time_stamp() + "*** Scenario 4 Expected: Coordinates keep to 5002 1002 (Exploited if set to 5040 1040)\n")
     bs1.cmd("pkill -9 -f /rest/locationRestServer.py &")
     set_rest_location(d4, iterations=30, interval=5,
-                 target='10.0.0.250', coordinates='44 44 44')
+                 target='10.0.0.250', coordinates='5040 1040')
 
     info(time_stamp() + "*** Scenario 5: A compromised base station joins the network tries to change the destination coordinates\n")
+    info(time_stamp() + "*** Scenario 5 Expected: Coordinates keep to 5002 1002 (Exploited if set to 5050 1050)\n")
     bs2 = net.addStation('base2',
                          ip='10.0.0.101',
                          mac='00:00:00:00:00:00',
@@ -169,7 +174,7 @@ the compromised drone tries to change the destination coordinates\n")
                 mode='g', channel=5, ht_cap='HT40+')
     makeTerm(bs2, cmd="bash")
     set_rest_location(bs2, iterations=30, interval=5,
-                 target='10.0.0.251', coordinates='55 55 55')
+                 target='10.0.0.251', coordinates='5050 1050')
 
     info(time_stamp() + '*** Running CLI\n')
     CLI(net)
