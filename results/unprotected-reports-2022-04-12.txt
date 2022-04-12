@@ -1,0 +1,237 @@
+http://localhost:3000/goto/fwAj5JUnk?orgId=1
+http://localhost:3000/dashboard/snapshot/G676QC0avfQoC9aEB6AXtx7RMlTcN6w9
+https://snapshots.raintank.io/dashboard/snapshot/FbysHFJy5pSG3LN8dil2kpetn8QWFuWU
+
+ubuntu@ubuntu-Virtual-Machine:~/Repos/Containernet-Wifi$ sudo python examples/uav/fanet_simulation_wifi_unsecured.py 30 5
+rm: cannot remove 'examples/uav/data/*': No such file or directory
+rm: cannot remove 'examples/uav/data/*': No such file or directory
+Error: No such container: grafana
+Error: No such container: cadvisor
+Error: No such container: mn.drone1
+Error: No such container: mn.drone2
+Error: No such container: mn.drone3
+Error: No such container: mn.drone4
+Error: No such container: mn.drone5
+Error: No such container: mn.base1
+Error: No such container: mn.base2
+iterations: 30
+wait time: 5
+2022-04-12T07:05:40.1649757940*** Starting monitors
+2022-04-12T07:05:40.1649757940*** Adding base station
+base1: kwargs {'ip': '10.0.0.1', 'ip6': '2001:0:0:0:0:0:0:1/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:00', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/base1/data:/data']}
+base1: update resources {'cpu_quota': -1}
+2022-04-12T07:05:41.1649757941*** Adding docker drones
+ts=2022-04-12T10:05:41.974Z caller=main.go:479 level=info msg="No time or size retention was set so using the default time retention" duration=15d
+ts=2022-04-12T10:05:41.974Z caller=main.go:516 level=info msg="Starting Prometheus" version="(version=2.34.0, branch=HEAD, revision=881111fec4332c33094a6fb2680c71fffc427275)"
+ts=2022-04-12T10:05:41.974Z caller=main.go:521 level=info build_context="(go=go1.17.8, user=root@121ad7ea5487, date=20220315-15:18:00)"
+ts=2022-04-12T10:05:41.974Z caller=main.go:522 level=info host_details="(Linux 5.4.0-107-generic #121~18.04.1-Ubuntu SMP Thu Mar 24 17:21:33 UTC 2022 x86_64 ubuntu-Virtual-Machine (none))"
+ts=2022-04-12T10:05:41.974Z caller=main.go:523 level=info fd_limits="(soft=16384, hard=16384)"
+ts=2022-04-12T10:05:41.974Z caller=main.go:524 level=info vm_limits="(soft=unlimited, hard=unlimited)"
+ts=2022-04-12T10:05:41.976Z caller=web.go:540 level=info component=web msg="Start listening for connections" address=0.0.0.0:9090
+ts=2022-04-12T10:05:41.977Z caller=main.go:755 level=error msg="Unable to start web listener" err="listen tcp 0.0.0.0:9090: bind: address already in use"
+drone1: kwargs {'ip': '10.0.0.249', 'ip6': '2001:0:0:0:0:0:0:2/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:01', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/drone1/root:/root', '/tmp/drone1/data:/data'], 'mem_limit': 3900182016, 'cpu_shares': 5, 'cpu_period': 50000, 'cpu_quota': 10000, 'position': '30,60,10'}
+drone1: update resources {'cpu_quota': 10000, 'cpu_period': 50000, 'cpu_shares': 5, 'mem_limit': 3900182016}
+drone2: kwargs {'ip': '10.0.0.250', 'ip6': '2001:0:0:0:0:0:0:3/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:02', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/drone2/root:/root', '/tmp/drone2/data:/data'], 'mem_limit': 958182016, 'cpu_shares': 2, 'cpu_period': 50000, 'cpu_quota': 10000, 'position': '31,61,10'}
+drone2: update resources {'cpu_quota': 10000, 'cpu_period': 50000, 'cpu_shares': 2, 'mem_limit': 958182016}
+drone3: kwargs {'ip': '10.0.0.251', 'ip6': '2001:0:0:0:0:0:0:4/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:03', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/drone3/root:/root', '/tmp/drone3/data:/data'], 'mem_limit': 3900182016, 'cpu_shares': 5, 'cpu_period': 50000, 'cpu_quota': 10000, 'position': '50,50,10'}
+drone3: update resources {'cpu_quota': 10000, 'cpu_period': 50000, 'cpu_shares': 5, 'mem_limit': 3900182016}
+drone4: kwargs {'ip': '10.0.0.252', 'ip6': '2001:0:0:0:0:0:0:5/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:04', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/drone4/root:/root', '/tmp/drone4/data:/data'], 'mem_limit': 1900182016, 'cpu_shares': 5, 'cpu_period': 50000, 'cpu_quota': 10000, 'position': '60,20,10'}
+drone4: update resources {'cpu_quota': 10000, 'cpu_period': 50000, 'cpu_shares': 5, 'mem_limit': 1900182016}
+drone5: kwargs {'ip': '10.0.0.253', 'ip6': '2001:0:0:0:0:0:0:6/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:05', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/drone5/root:/root', '/tmp/drone5/data:/data'], 'mem_limit': 3900182016, 'cpu_shares': 10, 'cpu_period': 50000, 'cpu_quota': 10000, 'position': '20,60,10'}
+drone5: update resources {'cpu_quota': 10000, 'cpu_period': 50000, 'cpu_shares': 10, 'mem_limit': 3900182016}
+
+*** Configuring wifi nodes
+2022-04-12T07:05:51.1649757951*** Starting network
+drone1 drone2 drone3 drone4 drone5 *** Starting controller(s)
+
+*** Starting L2 nodes
+
+2022-04-12T07:05:56.1649757956*** Starting Socket Server
+
+*** Perform a simple test
+2022-04-12T07:05:56.1649757956*** Starting REST server on drones
+2022-04-12T07:05:56.1649757956*** Starting Validation REST server on base station
+2022-04-12T07:05:56.1649757956*** Start drone terminals
+2022-04-12T07:06:01.1649757961*** Configure the node position
+2022-04-12T07:06:01.1649757961*** Scenario 1: BS1 sends initial coordinates to Drone 3
+2022-04-12T07:06:01.1649757961*** Scenario 1 Expected: Coordinates set to 5001 1001
+2022-04-12T07:06:06.1649757966 Iteration number 1 of 30
+2022-04-12T07:06:11.1649757971 Iteration number 2 of 30
+2022-04-12T07:06:16.1649757976 Iteration number 3 of 30
+2022-04-12T07:06:21.1649757981 Iteration number 4 of 30
+2022-04-12T07:06:26.1649757986 Iteration number 5 of 30
+2022-04-12T07:06:31.1649757991 Iteration number 6 of 30
+2022-04-12T07:06:36.1649757996 Iteration number 7 of 30
+2022-04-12T07:06:41.1649758001 Iteration number 8 of 30
+2022-04-12T07:06:46.1649758006 Iteration number 9 of 30
+2022-04-12T07:06:51.1649758011 Iteration number 10 of 30
+2022-04-12T07:06:56.1649758016 Iteration number 11 of 30
+2022-04-12T07:07:01.1649758021 Iteration number 12 of 30
+2022-04-12T07:07:06.1649758026 Iteration number 13 of 30
+2022-04-12T07:07:11.1649758031 Iteration number 14 of 30
+2022-04-12T07:07:16.1649758036 Iteration number 15 of 30
+2022-04-12T07:07:21.1649758041 Iteration number 16 of 30
+2022-04-12T07:07:26.1649758046 Iteration number 17 of 30
+2022-04-12T07:07:31.1649758051 Iteration number 18 of 30
+2022-04-12T07:07:37.1649758057 Iteration number 19 of 30
+2022-04-12T07:07:42.1649758062 Iteration number 20 of 30
+2022-04-12T07:07:47.1649758067 Iteration number 21 of 30
+2022-04-12T07:07:52.1649758072 Iteration number 22 of 30
+2022-04-12T07:07:57.1649758077 Iteration number 23 of 30
+2022-04-12T07:08:02.1649758082 Iteration number 24 of 30
+2022-04-12T07:08:07.1649758087 Iteration number 25 of 30
+2022-04-12T07:08:12.1649758092 Iteration number 26 of 30
+2022-04-12T07:08:17.1649758097 Iteration number 27 of 30
+2022-04-12T07:08:22.1649758102 Iteration number 28 of 30
+2022-04-12T07:08:27.1649758107 Iteration number 29 of 30
+2022-04-12T07:08:32.1649758112 Iteration number 30 of 30
+2022-04-12T07:08:32.1649758112*** Scenario 2: BS1 changes the destination coordinates through Drone 2
+2022-04-12T07:08:32.1649758112*** Scenario 2 Expected: Coordinates set to 5002 1002
+2022-04-12T07:08:37.1649758117 Iteration number 1 of 30
+2022-04-12T07:08:42.1649758122 Iteration number 2 of 30
+2022-04-12T07:08:47.1649758127 Iteration number 3 of 30
+2022-04-12T07:08:52.1649758132 Iteration number 4 of 30
+2022-04-12T07:08:57.1649758137 Iteration number 5 of 30
+2022-04-12T07:09:02.1649758142 Iteration number 6 of 30
+2022-04-12T07:09:07.1649758147 Iteration number 7 of 30
+2022-04-12T07:09:12.1649758152 Iteration number 8 of 30
+2022-04-12T07:09:17.1649758157 Iteration number 9 of 30
+2022-04-12T07:09:22.1649758162 Iteration number 10 of 30
+2022-04-12T07:09:27.1649758167 Iteration number 11 of 30
+2022-04-12T07:09:32.1649758172 Iteration number 12 of 30
+2022-04-12T07:09:37.1649758177 Iteration number 13 of 30
+2022-04-12T07:09:42.1649758182 Iteration number 14 of 30
+2022-04-12T07:09:47.1649758187 Iteration number 15 of 30
+2022-04-12T07:09:52.1649758192 Iteration number 16 of 30
+2022-04-12T07:09:57.1649758197 Iteration number 17 of 30
+2022-04-12T07:10:02.1649758202 Iteration number 18 of 30
+2022-04-12T07:10:07.1649758207 Iteration number 19 of 30
+2022-04-12T07:10:12.1649758212 Iteration number 20 of 30
+2022-04-12T07:10:17.1649758217 Iteration number 21 of 30
+2022-04-12T07:10:22.1649758222 Iteration number 22 of 30
+2022-04-12T07:10:27.1649758227 Iteration number 23 of 30
+2022-04-12T07:10:32.1649758232 Iteration number 24 of 30
+2022-04-12T07:10:37.1649758237 Iteration number 25 of 30
+2022-04-12T07:10:42.1649758242 Iteration number 26 of 30
+2022-04-12T07:10:47.1649758247 Iteration number 27 of 30
+2022-04-12T07:10:52.1649758252 Iteration number 28 of 30
+2022-04-12T07:10:57.1649758257 Iteration number 29 of 30
+2022-04-12T07:11:02.1649758262 Iteration number 30 of 30
+2022-04-12T07:11:02.1649758262*** Scenario 3: Drone 5 is compromised and tries to change the destination coordinates
+2022-04-12T07:11:02.1649758262*** Scenario 3 Expected: Coordinates keep to 5002 1002 (Exploited if set to 5030 1030)
+2022-04-12T07:11:07.1649758267 Iteration number 1 of 30
+2022-04-12T07:11:12.1649758272 Iteration number 2 of 30
+2022-04-12T07:11:17.1649758277 Iteration number 3 of 30
+2022-04-12T07:11:22.1649758282 Iteration number 4 of 30
+2022-04-12T07:11:27.1649758287 Iteration number 5 of 30
+2022-04-12T07:11:32.1649758292 Iteration number 6 of 30
+2022-04-12T07:11:37.1649758297 Iteration number 7 of 30
+2022-04-12T07:11:42.1649758302 Iteration number 8 of 30
+2022-04-12T07:11:47.1649758307 Iteration number 9 of 30
+2022-04-12T07:11:52.1649758312 Iteration number 10 of 30
+2022-04-12T07:11:57.1649758317 Iteration number 11 of 30
+2022-04-12T07:12:02.1649758322 Iteration number 12 of 30
+2022-04-12T07:12:07.1649758327 Iteration number 13 of 30
+2022-04-12T07:12:12.1649758332 Iteration number 14 of 30
+2022-04-12T07:12:17.1649758337 Iteration number 15 of 30
+2022-04-12T07:12:22.1649758342 Iteration number 16 of 30
+2022-04-12T07:12:27.1649758347 Iteration number 17 of 30
+2022-04-12T07:12:32.1649758352 Iteration number 18 of 30
+2022-04-12T07:12:37.1649758357 Iteration number 19 of 30
+2022-04-12T07:12:42.1649758362 Iteration number 20 of 30
+2022-04-12T07:12:47.1649758367 Iteration number 21 of 30
+2022-04-12T07:12:52.1649758372 Iteration number 22 of 30
+2022-04-12T07:12:57.1649758377 Iteration number 23 of 30
+2022-04-12T07:13:02.1649758382 Iteration number 24 of 30
+2022-04-12T07:13:07.1649758387 Iteration number 25 of 30
+2022-04-12T07:13:12.1649758392 Iteration number 26 of 30
+2022-04-12T07:13:17.1649758397 Iteration number 27 of 30
+2022-04-12T07:13:22.1649758402 Iteration number 28 of 30
+2022-04-12T07:13:27.1649758407 Iteration number 29 of 30
+2022-04-12T07:13:32.1649758412 Iteration number 30 of 30
+2022-04-12T07:13:32.1649758412*** Scenario 4: Connection with the base station is lost and the compromised drone tries to change the destination coordinates
+2022-04-12T07:13:32.1649758412*** Scenario 4 Expected: Coordinates keep to 5002 1002 (Exploited if set to 5040 1040)
+2022-04-12T07:13:37.1649758417 Iteration number 1 of 30
+2022-04-12T07:13:42.1649758422 Iteration number 2 of 30
+2022-04-12T07:13:47.1649758427 Iteration number 3 of 30
+2022-04-12T07:13:52.1649758432 Iteration number 4 of 30
+2022-04-12T07:13:57.1649758437 Iteration number 5 of 30
+2022-04-12T07:14:02.1649758442 Iteration number 6 of 30
+2022-04-12T07:14:07.1649758447 Iteration number 7 of 30
+2022-04-12T07:14:12.1649758452 Iteration number 8 of 30
+2022-04-12T07:14:17.1649758457 Iteration number 9 of 30
+2022-04-12T07:14:22.1649758462 Iteration number 10 of 30
+2022-04-12T07:14:27.1649758467 Iteration number 11 of 30
+2022-04-12T07:14:32.1649758472 Iteration number 12 of 30
+2022-04-12T07:14:37.1649758477 Iteration number 13 of 30
+2022-04-12T07:14:42.1649758482 Iteration number 14 of 30
+2022-04-12T07:14:48.1649758488 Iteration number 15 of 30
+2022-04-12T07:14:53.1649758493 Iteration number 16 of 30
+2022-04-12T07:14:58.1649758498 Iteration number 17 of 30
+2022-04-12T07:15:03.1649758503 Iteration number 18 of 30
+2022-04-12T07:15:08.1649758508 Iteration number 19 of 30
+2022-04-12T07:15:13.1649758513 Iteration number 20 of 30
+2022-04-12T07:15:18.1649758518 Iteration number 21 of 30
+2022-04-12T07:15:23.1649758523 Iteration number 22 of 30
+2022-04-12T07:15:28.1649758528 Iteration number 23 of 30
+2022-04-12T07:15:33.1649758533 Iteration number 24 of 30
+2022-04-12T07:15:38.1649758538 Iteration number 25 of 30
+2022-04-12T07:15:43.1649758543 Iteration number 26 of 30
+2022-04-12T07:15:48.1649758548 Iteration number 27 of 30
+2022-04-12T07:15:53.1649758553 Iteration number 28 of 30
+2022-04-12T07:15:58.1649758558 Iteration number 29 of 30
+2022-04-12T07:16:03.1649758563 Iteration number 30 of 30
+2022-04-12T07:16:03.1649758563*** Scenario 5: A compromised base station joins the network tries to change the destination coordinates
+2022-04-12T07:16:03.1649758563*** Scenario 5 Expected: Coordinates keep to 5002 1002 (Exploited if set to 5050 1050)
+base2: kwargs {'ip': '10.0.0.101', 'ip6': '2001:0:0:0:0:0:0:7/64', 'channel': 1, 'band': 20, 'freq': 2.4, 'mode': 'g', 'encrypt': '', 'passwd': None, 'ieee80211w': None, 'mac': '00:00:00:00:00:00', 'ports': [4004, 8008, 8800, 5050, 3030, 5000], 'volumes': ['/tmp/base2:/root']}
+base2: update resources {'cpu_quota': -1}
+2022-04-12T07:16:09.1649758569 Iteration number 1 of 30
+2022-04-12T07:16:14.1649758574 Iteration number 2 of 30
+2022-04-12T07:16:19.1649758579 Iteration number 3 of 30
+2022-04-12T07:16:24.1649758584 Iteration number 4 of 30
+2022-04-12T07:16:29.1649758589 Iteration number 5 of 30
+2022-04-12T07:16:34.1649758594 Iteration number 6 of 30
+2022-04-12T07:16:39.1649758599 Iteration number 7 of 30
+2022-04-12T07:16:44.1649758604 Iteration number 8 of 30
+2022-04-12T07:16:49.1649758609 Iteration number 9 of 30
+2022-04-12T07:16:54.1649758614 Iteration number 10 of 30
+2022-04-12T07:16:59.1649758619 Iteration number 11 of 30
+2022-04-12T07:17:04.1649758624 Iteration number 12 of 30
+2022-04-12T07:17:09.1649758629 Iteration number 13 of 30
+2022-04-12T07:17:14.1649758634 Iteration number 14 of 30
+2022-04-12T07:17:19.1649758639 Iteration number 15 of 30
+2022-04-12T07:17:24.1649758644 Iteration number 16 of 30
+2022-04-12T07:17:29.1649758649 Iteration number 17 of 30
+2022-04-12T07:17:34.1649758654 Iteration number 18 of 30
+2022-04-12T07:17:39.1649758659 Iteration number 19 of 30
+2022-04-12T07:17:44.1649758664 Iteration number 20 of 30
+2022-04-12T07:17:49.1649758669 Iteration number 21 of 30
+2022-04-12T07:17:54.1649758674 Iteration number 22 of 30
+2022-04-12T07:17:59.1649758679 Iteration number 23 of 30
+2022-04-12T07:18:04.1649758684 Iteration number 24 of 30
+2022-04-12T07:18:09.1649758689 Iteration number 25 of 30
+2022-04-12T07:18:14.1649758694 Iteration number 26 of 30
+2022-04-12T07:18:19.1649758699 Iteration number 27 of 30
+2022-04-12T07:18:24.1649758704 Iteration number 28 of 30
+2022-04-12T07:18:29.1649758709 Iteration number 29 of 30
+2022-04-12T07:18:35.1649758715 Iteration number 30 of 30
+sh: function: No such file or directory
+2022-04-12T07:18:35.1649758715*** Running CLI
+*** Starting CLI:
+mininet> exit
+2022-04-12T07:19:45.1649758785*** Stopping networkrm: cannot remove 'examples/uav/data/*': No such file or directory
+*** Removing NAT rules of 0 SAPs
+
+*** Stopping 0 controllers
+
+*** Stopping 6 links
+......
+*** Stopping 0 switches
+
+*** Stopping 7 hosts/stations
+base1 drone1 drone2 drone3 drone4 drone5 base2 
+*** Removing WiFi module and Configurations
+*** Killing mac80211_hwsim
+
+*** Done
+Killed

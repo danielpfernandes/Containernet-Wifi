@@ -282,6 +282,11 @@ def validate_scenario(net, expected_coord, coordinates) -> bool:
         sys.exit(1)
 
 
+def save_logs_to_results(preffix_name: str = 'sim'):
+    os.system('chown -R $USER:$USER /tmp/drone* /tmp/base*')
+    os.system('zip -r results/'+ preffix_name + str(coord_time_stamp) +'.zip /tmp/drone* tmp/base*')
+
+
 def kill_process():
     # os.system('pkill -9 -f coppeliaSim')
     os.system('pkill -9 -f simpleTest.py')

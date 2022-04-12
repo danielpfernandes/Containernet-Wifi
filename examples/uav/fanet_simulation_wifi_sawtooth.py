@@ -14,7 +14,7 @@ from containernet.net import Containernet
 from containernet.node import DockerSta
 from containernet.term import makeTerm
 
-from fanet_utils import get_sawtooth_destination, initialize_sawtooth, validate_scenario, kill_containers, \
+from fanet_utils import get_sawtooth_destination, initialize_sawtooth, save_logs_to_results, validate_scenario, kill_containers, \
     kill_process, set_sawtooth_location, set_rest_location, setup_network, time_stamp
 
 
@@ -195,6 +195,7 @@ def simulate(iterations_count: int = 5,
     
     info(time_stamp() + "*** Saving Drones logs at /tmp/drone/data/sawtooth/\n")
     save_sawtooth_logs(d1, d2, d3, d4)
+    save_logs_to_results()
     
     if not skip_cli:
         info(time_stamp() + '*** Running CLI\n')
