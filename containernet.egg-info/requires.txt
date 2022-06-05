@@ -1,6 +1,0 @@
-setuptools
-urllib3
-docker
-python-iptables
-pytest
-more-itertools
